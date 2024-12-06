@@ -27,7 +27,6 @@
   "scripts": {
     "build:browser": "vite build",
     "build": "npm run build:browser && tsc -p tsconfig.json",
-    "postinstall": "npm run build",
     "typecheck": " tsc --noEmit --project tsconfig.json",
     "lint": "eslint -c .eslintrc.cjs --ext .ts",
     "prepublishOnly": "npm run build",
