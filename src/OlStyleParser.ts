@@ -1094,7 +1094,7 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
       case 'third_circle':
       case 'trapezoid':
       case 'triangle':
-        import(`./svg/${shape}.svg`)
+        import(`./svg/heart.svg`)
           .then((module) => {
             const parser = new DOMParser();
             const svgDoc = parser.parseFromString(module.default, 'image/svg+xml');
