@@ -38,7 +38,7 @@ import OlStyle, { StyleFunction as OlStyleFunction, StyleLike as OlStyleLike} fr
 import OlStyleImage from 'ol/style/Image';
 import OlStyleStroke from 'ol/style/Stroke';
 import OlStyleText, { Options as OlStyleTextOptions }  from 'ol/style/Text';
-import OlStyleCircle, { Options as OlStyleCircleOptions } from 'ol/style/Circle';
+import OlStyleCircle from 'ol/style/Circle';
 import OlStyleFill from 'ol/style/Fill';
 import OlStyleIcon, { Options as OlStyleIconOptions }  from 'ol/style/Icon';
 import OlStyleRegularshape from 'ol/style/RegularShape';
