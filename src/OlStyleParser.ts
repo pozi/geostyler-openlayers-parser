@@ -48,6 +48,19 @@ import OlStyleUtil from './Util/OlStyleUtil';
 import { toContext } from 'ol/render';
 import OlFeature from 'ol/Feature';
 
+const svgModules = import.meta.glob('./svg/*.svg', { as: 'raw' });
+
+export const getSvg = async (fileName: string): Promise<string> => {
+  const path = `./svg/${fileName}.svg`;
+
+  if (path in svgModules) {
+    const module = await svgModules[path]();
+    return module;
+  } else {
+    throw new Error(`SVG file ${fileName} not found.`);
+  }
+};
+
 export interface OlParserStyleFct {
   (feature?: any, resolution?: number): any;
   __geoStylerStyle: Style;
@@ -1094,10 +1107,10 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
       case 'third_circle':
       case 'trapezoid':
       case 'triangle':
-        import(`./svg/heart.svg`)
-          .then((module) => {
+        getSvg(shape)
+          .then((svgContent) => {
             const parser = new DOMParser();
-            const svgDoc = parser.parseFromString(module.default, 'image/svg+xml');
+            const svgDoc = parser.parseFromString(svgContent, 'image/svg+xml');
             const svgElement = svgDoc.documentElement;
 
             const updateAttributes = (selector: string, attribute: string, value: string) => {

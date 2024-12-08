@@ -13,6 +13,17 @@ import OlStyleRegularshape from 'ol/style/RegularShape';
 import { METERS_PER_UNIT } from 'ol/proj/Units';
 import OlStyleUtil from './Util/OlStyleUtil';
 import { toContext } from 'ol/render';
+const svgModules = import.meta.glob('./svg/*.svg', { as: 'raw' });
+export const getSvg = async (fileName) => {
+    const path = `./svg/${fileName}.svg`;
+    if (path in svgModules) {
+        const module = await svgModules[path]();
+        return module;
+    }
+    else {
+        throw new Error(`SVG file ${fileName} not found.`);
+    }
+};
 /**
  * This parser can be used with the GeoStyler.
  * It implements the GeoStyler-Style Parser interface to work with OpenLayers styles.
@@ -1016,10 +1027,10 @@ export class OlStyleParser {
             case 'third_circle':
             case 'trapezoid':
             case 'triangle':
-                import(`./svg/heart.svg`)
-                    .then((module) => {
+                getSvg(shape)
+                    .then((svgContent) => {
                     const parser = new DOMParser();
-                    const svgDoc = parser.parseFromString(module.default, 'image/svg+xml');
+                    const svgDoc = parser.parseFromString(svgContent, 'image/svg+xml');
                     const svgElement = svgDoc.documentElement;
                     const updateAttributes = (selector, attribute, value) => {
                         svgElement.querySelectorAll(selector).forEach(el => el.setAttribute(attribute, value));

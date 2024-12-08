@@ -17,6 +17,7 @@
     "sourceMap": true,
     "strictNullChecks": true,
     "target": "ES2022",
+    "types": ["vite/client"]
   },
   "exclude": [
     "node_modules",
