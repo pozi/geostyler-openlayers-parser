@@ -1041,21 +1041,12 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
       color: fColor
     });
 
-    const dimensions = (markSymbolizer?.radius as number ?? 8) * 2;  // Default to 16 pixels
-
     let olStyle: any;
     const shapeOpts = {
       fill: fill,
       radius: radius ?? 5,
       rotation: typeof(markSymbolizer.rotate) === 'number' ? markSymbolizer.rotate * Math.PI / 180 : undefined,
       stroke: stroke,
-      displacement: Array.isArray(markSymbolizer.offset) ? markSymbolizer.offset.map(Number) : undefined
-    };
-
-    const iconOpts: OlStyleIconOptions = {
-      crossOrigin: 'anonymous',
-      opacity: markSymbolizer.opacity as number,
-      rotation: typeof(markSymbolizer.rotate) === 'number' ? markSymbolizer.rotate * Math.PI / 180 : undefined,
       displacement: Array.isArray(markSymbolizer.offset) ? markSymbolizer.offset.map(Number) : undefined
     };
 
@@ -1081,24 +1072,6 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
             ...shapeOpts,
             points: 3,
             angle: 0
-          })
-        });
-        break;
-      case 'diamond':
-        const markerSVG = `
-          <svg xmlns="http://www.w3.org/2000/svg" width="` + dimensions + `" height="` + dimensions + `" viewBox="-12 -12 24 24">
-            <polygon points="-10,0 0,10 10,0 0,-10 -10,0"
-                fill="` + fColor + `" 
-                stroke="` + markSymbolizer.strokeColor + `"
-                stroke-width="` + (markSymbolizer.strokeWidth === undefined ? 1 : markSymbolizer.strokeWidth) + `"/>
-          </svg>
-        `;
-
-        olStyle = new this.OlStyleConstructor({
-          image: new this.OlStyleIconConstructor({
-            ...iconOpts,
-            src: `data:image/svg+xml;base64,${btoa(markerSVG)}`, // Convert SVG string to Base64
-            scale: 1
           })
         });
         break;
