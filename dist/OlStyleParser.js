@@ -946,6 +946,7 @@ export class OlStyleParser {
         }
         const strokeColor = markSymbolizer.strokeColor;
         const strokeOpacity = markSymbolizer.strokeOpacity;
+        const strokeWidth = markSymbolizer.strokeWidth === undefined ? 1 : markSymbolizer.strokeWidth;
         const sColor = strokeColor && (strokeOpacity !== undefined)
             ? OlStyleUtil.getRgbaColor(strokeColor, strokeOpacity)
             : markSymbolizer.strokeColor;
@@ -958,6 +959,7 @@ export class OlStyleParser {
         const color = markSymbolizer.color;
         const opacity = markSymbolizer.opacity;
         const radius = markSymbolizer.radius;
+        const dimensions = (markSymbolizer?.radius ?? 8) * 2; // Default to 16 pixels
         const fillOpacity = markSymbolizer.fillOpacity;
         const fColor = color && (fillOpacity !== undefined)
             ? OlStyleUtil.getRgbaColor(color, fillOpacity ?? 1)
@@ -965,7 +967,6 @@ export class OlStyleParser {
         const fill = new this.OlStyleFillConstructor({
             color: fColor
         });
-        const dimensions = (markSymbolizer?.radius ?? 8) * 2; // Default to 16 pixels
         let olStyle;
         const shapeOpts = {
             fill: fill,
@@ -974,80 +975,72 @@ export class OlStyleParser {
             stroke: stroke,
             displacement: Array.isArray(markSymbolizer.offset) ? markSymbolizer.offset.map(Number) : undefined
         };
-        const iconOpts = {
-            crossOrigin: 'anonymous',
-            opacity: markSymbolizer.opacity,
-            rotation: typeof (markSymbolizer.rotate) === 'number' ? markSymbolizer.rotate * Math.PI / 180 : undefined,
-            displacement: Array.isArray(markSymbolizer.offset) ? markSymbolizer.offset.map(Number) : undefined
-        };
-        switch (markSymbolizer.wellKnownName) {
-            case 'shape://dot':
+        let shape = markSymbolizer.wellKnownName;
+        shape = shape === 'shape://dot' ? 'circle' : shape;
+        shape = shape === 'shape://plus' ? 'cross' : shape;
+        switch (shape) {
+            case 'arrow':
+            case 'arrowhead':
+            case 'asterisk_fill':
             case 'circle':
-                olStyle = new this.OlStyleConstructor({
-                    image: new this.OlStyleCircleConstructor(shapeOpts)
-                });
-                break;
-            case 'square':
-                olStyle = new this.OlStyleConstructor({
-                    image: new this.OlStyleRegularshapeConstructor({
-                        ...shapeOpts,
-                        points: 4,
-                        angle: 45 * Math.PI / 180
-                    })
-                });
-                break;
-            case 'triangle':
-                olStyle = new this.OlStyleConstructor({
-                    image: new this.OlStyleRegularshapeConstructor({
-                        ...shapeOpts,
-                        points: 3,
-                        angle: 0
-                    })
-                });
-                break;
-            case 'diamond':
-                const markerSVG = `
-          <svg xmlns="http://www.w3.org/2000/svg" width="` + dimensions + `" height="` + dimensions + `" viewBox="-12 -12 24 24">
-            <polygon points="-10,0 0,10 10,0 0,-10 -10,0"
-                fill="` + fColor + `" 
-                stroke="` + markSymbolizer.strokeColor + `"
-                stroke-width="` + (markSymbolizer.strokeWidth === undefined ? 1 : markSymbolizer.strokeWidth) + `"/>
-          </svg>
-        `;
-                olStyle = new this.OlStyleConstructor({
-                    image: new this.OlStyleIconConstructor({
-                        ...iconOpts,
-                        src: `data:image/svg+xml;base64,${btoa(markerSVG)}`, // Convert SVG string to Base64
-                        scale: 1
-                    })
-                });
-                break;
-            case 'star':
-                olStyle = new this.OlStyleConstructor({
-                    image: new this.OlStyleRegularshapeConstructor({
-                        ...shapeOpts,
-                        points: 5,
-                        radius2: shapeOpts.radius / 2.5,
-                        angle: 0
-                    })
-                });
-                break;
-            case 'shape://plus':
             case 'cross':
-                // openlayers does not seem to set a default stroke color,
-                // which is needed for regularshapes with radius2 = 0
-                if (shapeOpts.stroke === undefined) {
-                    shapeOpts.stroke = new this.OlStyleStrokeConstructor({
-                        color: '#000'
+            case 'cross2':
+            case 'cross_fill':
+            case 'decagon':
+            case 'diagonal_half_square':
+            case 'diamond':
+            case 'equilateral_triangle':
+            case 'filled_arrowhead':
+            case 'half_arc':
+            case 'half_square':
+            case 'heart':
+            case 'hexagon':
+            case 'left_half_triangle':
+            case 'line':
+            case 'octagon':
+            case 'parallelogram_left':
+            case 'parallelogram_right':
+            case 'pentagon':
+            case 'quarter_arc':
+            case 'quarter_circle':
+            case 'quarter_square':
+            case 'right_half_triangle':
+            case 'rounded_square':
+            case 'semi_circle':
+            case 'shield':
+            case 'square':
+            case 'square_with_corners':
+            case 'star':
+            case 'star_diamond':
+            case 'third_arc':
+            case 'third_circle':
+            case 'trapezoid':
+            case 'triangle':
+                import(`./svg/${shape}.svg`)
+                    .then((module) => {
+                    const parser = new DOMParser();
+                    const svgDoc = parser.parseFromString(module.default, 'image/svg+xml');
+                    const svgElement = svgDoc.documentElement;
+                    const updateAttributes = (selector, attribute, value) => {
+                        svgElement.querySelectorAll(selector).forEach(el => el.setAttribute(attribute, value));
+                    };
+                    // Update attributes
+                    updateAttributes('[fill]', 'fill', String(fColor));
+                    updateAttributes('[stroke]', 'stroke', String(sColor));
+                    updateAttributes('[stroke-width]', 'stroke-width', String(strokeWidth));
+                    updateAttributes('[width]', 'width', String(dimensions));
+                    updateAttributes('[height]', 'height', String(dimensions));
+                    const serializer = new XMLSerializer();
+                    const updatedSvg = serializer.serializeToString(svgElement);
+                    olStyle = new this.OlStyleConstructor({
+                        image: new this.OlStyleIconConstructor({
+                            src: `data:image/svg+xml;base64,${btoa(updatedSvg)}`,
+                            scale: 1,
+                        }),
                     });
-                }
-                olStyle = new this.OlStyleConstructor({
-                    image: new this.OlStyleRegularshapeConstructor({
-                        ...shapeOpts,
-                        points: 4,
-                        radius2: 0,
-                        angle: 0
-                    })
+                })
+                    .catch(() => {
+                    throw new Error(`No SVG for WellKnownName (${shape}.)`);
                 });
                 break;
             case 'shape://times':
