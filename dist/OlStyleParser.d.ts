@@ -8,7 +8,6 @@ import OlStyleFill from 'ol/style/Fill';
 import OlStyleIcon from 'ol/style/Icon';
 import OlStyleRegularshape from 'ol/style/RegularShape';
 import OlFeature from 'ol/Feature';
-export declare const getSvg: (fileName: string) => Promise<string>;
 export interface OlParserStyleFct {
     (feature?: any, resolution?: number): any;
     __geoStylerStyle: Style;

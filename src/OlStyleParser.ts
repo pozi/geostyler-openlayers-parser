@@ -45,21 +45,9 @@ import OlStyleRegularshape from 'ol/style/RegularShape';
 import { METERS_PER_UNIT } from 'ol/proj/Units';
 
 import OlStyleUtil from './Util/OlStyleUtil';
+import { getShapeSvg } from './Util/svgs';
 import { toContext } from 'ol/render';
 import OlFeature from 'ol/Feature';
-
-const svgModules = import.meta.glob('./svg/*.svg', { as: 'raw' });
-
-export const getSvg = async (fileName: string): Promise<string> => {
-  const path = `./svg/${fileName}.svg`;
-
-  if (path in svgModules) {
-    const module = await svgModules[path]();
-    return module;
-  } else {
-    throw new Error(`SVG file ${fileName} not found.`);
-  }
-};
 
 export interface OlParserStyleFct {
   (feature?: any, resolution?: number): any;
@@ -1030,7 +1018,7 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
 
     const strokeColor = markSymbolizer.strokeColor as string;
     const strokeOpacity = markSymbolizer.strokeOpacity as number;
-    const strokeWidth = markSymbolizer.strokeWidth === undefined ? 1 : markSymbolizer.strokeWidth;
+    const strokeWidth = String(markSymbolizer.strokeWidth === undefined ? 1 : markSymbolizer.strokeWidth);
 
     const sColor = strokeColor && (strokeOpacity !== undefined)
       ? OlStyleUtil.getRgbaColor(strokeColor, strokeOpacity)
@@ -1046,7 +1034,7 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
     const color = markSymbolizer.color as string;
     const opacity = markSymbolizer.opacity as number;
     const radius = markSymbolizer.radius as number;
-    const dimensions = (markSymbolizer?.radius as number ?? 8) * 2;  // Default to 16 pixels
+    const dimensions = String((markSymbolizer?.radius as number ?? 8) * 2);  // Default to 16 pixels
     const fillOpacity = markSymbolizer.fillOpacity as number;
     const fColor = color && (fillOpacity !== undefined)
       ? OlStyleUtil.getRgbaColor(color, fillOpacity ?? 1)
@@ -1063,6 +1051,13 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
       rotation: typeof(markSymbolizer.rotate) === 'number' ? markSymbolizer.rotate * Math.PI / 180 : undefined,
       stroke: stroke,
       displacement: Array.isArray(markSymbolizer.offset) ? markSymbolizer.offset.map(Number) : undefined
+    };
+
+    const imageOpts = {
+      fill: fColor,
+      stroke: sColor,
+      strokeWidth,
+      dimensions
     };
 
     let shape = markSymbolizer.wellKnownName;
@@ -1107,36 +1102,15 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
       case 'third_circle':
       case 'trapezoid':
       case 'triangle':
-        getSvg(shape)
-          .then((svgContent) => {
-            const parser = new DOMParser();
-            const svgDoc = parser.parseFromString(svgContent, 'image/svg+xml');
-            const svgElement = svgDoc.documentElement;
-
-            const updateAttributes = (selector: string, attribute: string, value: string) => {
-              svgElement.querySelectorAll(selector).forEach(el => el.setAttribute(attribute, value));
-            };
-
-            // Update attributes
-            updateAttributes('[fill]', 'fill', String(fColor));
-            updateAttributes('[stroke]', 'stroke', String(sColor));
-            updateAttributes('[stroke-width]', 'stroke-width', String(strokeWidth));
-            updateAttributes('[width]', 'width', String(dimensions));
-            updateAttributes('[height]', 'height', String(dimensions));
-
-            const serializer = new XMLSerializer();
-            const updatedSvg = serializer.serializeToString(svgElement);
-
-            olStyle = new this.OlStyleConstructor({
-              image: new this.OlStyleIconConstructor({
-                src: `data:image/svg+xml;base64,${btoa(updatedSvg)}`,
-                scale: 1,
-              }),
-            });
-          })
-          .catch(() => {
-            throw new Error(`No SVG for WellKnownName (${shape}.)`);
-          });
+        const svg = getShapeSvg(shape, imageOpts);
+        olStyle = new this.OlStyleConstructor({
+          image: new this.OlStyleIconConstructor({
+            displacement: shapeOpts.displacement,
+            rotation: shapeOpts.rotation,
+            src: `data:image/svg+xml;base64,${btoa(svg)}`,
+            scale: 1,
+          }),
+        });
         break;
       case 'shape://times':
       case 'x':
