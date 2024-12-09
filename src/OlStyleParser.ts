@@ -1018,7 +1018,7 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
 
     const strokeColor = markSymbolizer.strokeColor as string;
     const strokeOpacity = markSymbolizer.strokeOpacity as number;
-    const strokeWidth = String(markSymbolizer.strokeWidth === undefined ? 1 : markSymbolizer.strokeWidth);
+    const strokeWidth = String(markSymbolizer.strokeWidth === undefined ? 0 : markSymbolizer.strokeWidth);
 
     const sColor = strokeColor && (strokeOpacity !== undefined)
       ? OlStyleUtil.getRgbaColor(strokeColor, strokeOpacity)
@@ -1105,9 +1105,12 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
         const svg = getShapeSvg(shape, imageOpts);
         olStyle = new this.OlStyleConstructor({
           image: new this.OlStyleIconConstructor({
-            displacement: shapeOpts.displacement,
-            rotation: shapeOpts.rotation,
             src: `data:image/svg+xml;base64,${btoa(svg)}`,
+            crossOrigin: 'anonymous',
+            opacity: markSymbolizer.opacity as number,
+            // Rotation in openlayers is radians while we use degree
+            rotation: (typeof(markSymbolizer.rotate) === 'number' ? markSymbolizer.rotate * Math.PI / 180 : undefined) as number,
+            displacement: markSymbolizer.offset as [number, number],
             scale: 1,
           }),
         });
