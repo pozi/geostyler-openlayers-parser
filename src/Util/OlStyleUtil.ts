@@ -246,6 +246,26 @@ class OlStyleUtil {
   }
 
   /**
+   * Encodes the given SVG string using base64 encoding.
+   *
+   * @param svgString the SVG string to encode
+   * @returns the base64 encoded SVG string
+   */
+  public static getBase64EncodedSvg(svgString: string) {
+    return 'data:image/svg+xml;base64,' + Buffer.from(svgString).toString('base64');
+  }
+
+  /**
+   * Decodes a base64 encoded SVG string.
+   *
+   * @param svgBase64String The base64 encoded SVG string to decode.
+   * @returns The decoded SVG string in UTF-8 format.
+   */
+  public static getBase64DecodedSvg(svgBase64String: string) {
+    return Buffer.from(svgBase64String.replace('data:image/svg+xml;base64,', ''), 'base64').toString('utf-8');
+  }
+
+  /**
    * Resolves the given template string with the given feature attributes, e.g.
    * the template "Size of area is {{AREA_SIZE}} km²" would be to resolved
    * to "Size of area is 1909 km²" (assuming the feature's attribute AREA_SIZE

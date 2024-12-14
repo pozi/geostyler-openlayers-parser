@@ -107,6 +107,7 @@ import {
 
 import OlStyleUtil from './Util/OlStyleUtil';
 import exp from 'constants';
+import { getSvgProperties } from './Util/svgs';
 
 // reverse calculation of resolution for scale (from ol-util MapUtil)
 function getResolutionForScale (scale, units) {
@@ -460,11 +461,16 @@ describe('OlStyleParser implements StyleParser', () => {
       expect(olStyle).toBeDefined();
 
       const expecSymb = point_simplepoint.rules[0].symbolizers[0] as MarkSymbolizer;
-      const olCircle: OlStyleCircle = olStyle.getImage() as OlStyleCircle;
+      const olSimplePoint: OlStyleIcon = olStyle.getImage() as OlStyleIcon;
 
-      expect(olCircle).toBeDefined();
-      expect(olCircle.getRadius()).toBeCloseTo(expecSymb.radius as number);
-      expect(olCircle.getFill()?.getColor()).toEqual(expecSymb.color);
+      expect(olSimplePoint).toBeDefined();
+
+      const svgString = OlStyleUtil.getBase64DecodedSvg(olSimplePoint.getSrc() as string);
+      const { id, dimensions, fill } = getSvgProperties(svgString);
+
+      expect(id).toEqual(expecSymb.wellKnownName);
+      expect((dimensions / 2)).toBeCloseTo(expecSymb.radius as number);
+      expect(fill).toEqual(expecSymb.color);
     });
     it('can write an OpenLayers PointSymbolizer with displacement', async () => {
       let { output: olStyle } = await styleParser.writeStyle(point_simpleoffset);
@@ -472,7 +478,7 @@ describe('OlStyleParser implements StyleParser', () => {
       expect(olStyle).toBeDefined();
 
       const expecSymb = point_simpleoffset.rules[0].symbolizers[0] as MarkSymbolizer;
-      const olCircle: OlStyleCircle = olStyle.getImage() as OlStyleCircle;
+      const olCircle: OlStyleIcon = olStyle.getImage() as OlStyleIcon;
 
       expect(olCircle).toBeDefined();
       expect(olCircle.getDisplacement()).toEqual(expecSymb.offset);
