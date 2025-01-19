@@ -45,7 +45,7 @@ import OlStyleRegularshape from 'ol/style/RegularShape';
 import { METERS_PER_UNIT } from 'ol/proj/Units';
 
 import OlStyleUtil from './Util/OlStyleUtil';
-import { getShapeSvg, SvgOptions } from './Util/svgs';
+import { getShapeSvg, getSvgProperties, SvgOptions } from './Util/svgs';
 import { toContext } from 'ol/render';
 import OlFeature from 'ol/Feature';
 
@@ -319,23 +319,49 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
       // icon
       const olIconStyle = olStyle.getImage() as OlStyleIcon;
       const displacement = olIconStyle.getDisplacement() as [number, number];
-      // initialOptions_ as fallback when image is not yet loaded
-      const image = this.getImageFromIconStyle(olIconStyle);
       // this always gets calculated from ol so this might not have been set initially
       let size = olIconStyle.getWidth();
       const rotation = olIconStyle.getRotation() / Math.PI * 180;
       const opacity = olIconStyle.getOpacity();
 
-      const iconSymbolizer: IconSymbolizer = {
-        kind: 'Icon',
-        image,
-        opacity: opacity < 1 ? opacity : undefined,
-        size,
-        // Rotation in openlayers is radians while we use degree
-        rotate: rotation !== 0 ? rotation : undefined,
-        offset: displacement[0] || displacement[1] ? displacement : undefined
-      };
-      pointSymbolizer = iconSymbolizer;
+      // If the image is an SVG string try to extract the properties and build a MarkSymbolizer
+      try {
+        const svgString = OlStyleUtil.getBase64DecodedSvg(olIconStyle.getSrc() as string);
+        const { id, dimensions, fill, stroke, strokeWidth } = getSvgProperties(svgString);
+        const strokeOpacity = stroke
+          ? OlStyleUtil.getOpacity(stroke) !== 1
+            ? OlStyleUtil.getOpacity(stroke)
+            : undefined
+          : undefined;
+
+        pointSymbolizer = {
+          kind: 'Mark',
+          wellKnownName: id,
+          ...fill && { color: fill },
+          ...(opacity !== undefined && opacity !== 1 && { opacity }),
+          ...stroke && { strokeColor: stroke.substring(0, 7) },
+          ...strokeWidth !== undefined && { strokeWidth },
+          ...strokeOpacity !== undefined && { strokeOpacity },
+          ...(dimensions / 2 !== 0 && { radius: dimensions / 2 }),
+          ...(rotation !== undefined && rotation !== 0 && { rotate: rotation }),
+          ...((displacement[0] || displacement[1]) && { offset: displacement }),
+        } as MarkSymbolizer;
+      } catch {
+        // initialOptions_ as fallback when image is not yet loaded
+        const image = this.getImageFromIconStyle(olIconStyle);
+
+        const iconSymbolizer: IconSymbolizer = {
+          kind: 'Icon',
+          image,
+          opacity: opacity < 1 ? opacity : undefined,
+          size,
+          // Rotation in openlayers is radians while we use degree
+          rotate: rotation !== 0 ? rotation : undefined,
+          offset: displacement[0] || displacement[1] ? displacement : undefined
+        };
+        pointSymbolizer = iconSymbolizer;
+      }
+
     }
     return pointSymbolizer;
   }
@@ -1018,7 +1044,7 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
 
     const strokeColor = markSymbolizer.strokeColor as string;
     const strokeOpacity = markSymbolizer.strokeOpacity as number;
-    const strokeWidth = String(markSymbolizer.strokeWidth === undefined ? 0 : markSymbolizer.strokeWidth);
+    const strokeWidth = markSymbolizer.strokeWidth as number;
 
     const sColor = strokeColor && (strokeOpacity !== undefined)
       ? OlStyleUtil.getRgbaColor(strokeColor, strokeOpacity)
@@ -1054,10 +1080,12 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
     };
 
     const svgOpts: SvgOptions = {
-      fill: fColor,
-      stroke: sColor,
-      strokeWidth,
-      dimensions
+      dimensions,
+      ...(color && { fill: color }),
+      ...(fillOpacity && { fillOpacity }),
+      ...(strokeColor && { stroke: strokeColor }),
+      ...(strokeWidth && { strokeWidth }),
+      ...(strokeOpacity && { strokeOpacity })
     };
 
     let shape = markSymbolizer.wellKnownName;
@@ -1108,13 +1136,10 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
           image: new this.OlStyleIconConstructor({
             src: OlStyleUtil.getBase64EncodedSvg(svg),
             crossOrigin: 'anonymous',
-            displacement: markSymbolizer.offset as [number, number],
-            opacity: markSymbolizer.opacity as number,
-            rotation: (
-              typeof markSymbolizer.rotate === 'number'
-                ? (markSymbolizer.rotate * Math.PI) / 180
-                : undefined
-            ) as number,
+            ...(markSymbolizer.offset && { displacement: markSymbolizer.offset as [number, number] }),
+            ...(markSymbolizer.opacity && { opacity: markSymbolizer.opacity as number }),
+            ...(markSymbolizer.rotate && typeof markSymbolizer.rotate === 'number' 
+              && { rotation: (markSymbolizer.rotate * Math.PI) / 180 } ),
             scale: 1,
           }),
         });
@@ -1434,7 +1459,14 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
     const pixelRatio = scale;
     imageCloned.setScale(1);
 
-    const size: [number, number] = imageCloned.getSize();
+    let size: [number, number] = imageCloned.getSize();
+    if (!size) {
+      const iconSvg = OlStyleUtil.getBase64DecodedSvg(imageCloned.getSrc() as string);
+      const { dimensions } = getSvgProperties(iconSvg);
+      if (dimensions) {
+        size = [dimensions, dimensions];
+      }
+    }
 
     // Create the context where we'll be drawing the style on
     const vectorContext = toContext(tmpContext, {
