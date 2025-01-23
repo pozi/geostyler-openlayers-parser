@@ -1294,6 +1294,8 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
     } else {
       return null;
     }
+    // eslint-disable-next-line no-console
+    console.log('ZZZ - targetStyle1', graphicFillStyle);
 
     // We need to clone the style and image since we'll be changing the scale below (hack)
     const graphicFillStyleCloned = graphicFillStyle.clone();
@@ -1325,12 +1327,16 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
       pixelRatio,
       size
     });
+    // eslint-disable-next-line no-console
+    console.log('ZZZ - targetStyle1', vectorContext);
 
     // Draw the graphic
     vectorContext.setStyle(graphicFillStyleCloned);
     // const pointCoords = size.map(item  => item / 2);
     const pointCoords = [10, 10];
     vectorContext.drawGeometry(new OlGeomPoint(pointCoords));
+    // eslint-disable-next-line no-console
+    console.log('ZZZ - targetStyle1', vectorContext);
 
     // Create the actual pattern and return style
     return tmpContext.createPattern(tmpCanvas, 'repeat');
