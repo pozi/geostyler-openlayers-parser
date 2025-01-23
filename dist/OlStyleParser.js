@@ -1213,14 +1213,15 @@ export class OlStyleParser {
         const scale = imageCloned.getScale() || 1;
         const pixelRatio = scale;
         imageCloned.setScale(1);
-        let size = graphicFillStyle.getSize();
-        if (!size) {
-            const iconSvg = OlStyleUtil.getBase64DecodedSvg(imageCloned.getSrc());
-            const { dimensions } = getSvgProperties(iconSvg);
-            if (dimensions) {
-                size = [dimensions, dimensions];
-            }
-        }
+        // let size: [number, number] = graphicFillStyle.getSize();
+        // if (!size) {
+        //   const iconSvg = OlStyleUtil.getBase64DecodedSvg(imageCloned.getSrc() as string);
+        //   const { dimensions } = getSvgProperties(iconSvg);
+        //   if (dimensions) {
+        //     size = [dimensions, dimensions];
+        //   }
+        // }
+        const size = [20, 20];
         // Create the context where we'll be drawing the style on
         const vectorContext = toContext(tmpContext, {
             pixelRatio,

@@ -1310,14 +1310,15 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
     const pixelRatio = scale;
     imageCloned.setScale(1);
 
-    let size: [number, number] = graphicFillStyle.getSize();
-    if (!size) {
-      const iconSvg = OlStyleUtil.getBase64DecodedSvg(imageCloned.getSrc() as string);
-      const { dimensions } = getSvgProperties(iconSvg);
-      if (dimensions) {
-        size = [dimensions, dimensions];
-      }
-    }
+    // let size: [number, number] = graphicFillStyle.getSize();
+    // if (!size) {
+    //   const iconSvg = OlStyleUtil.getBase64DecodedSvg(imageCloned.getSrc() as string);
+    //   const { dimensions } = getSvgProperties(iconSvg);
+    //   if (dimensions) {
+    //     size = [dimensions, dimensions];
+    //   }
+    // }
+    const size: [number, number] = [20, 20];
 
     // Create the context where we'll be drawing the style on
     const vectorContext = toContext(tmpContext, {
