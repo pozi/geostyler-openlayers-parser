@@ -1213,7 +1213,7 @@ export class OlStyleParser {
         const scale = imageCloned.getScale() || 1;
         const pixelRatio = scale;
         imageCloned.setScale(1);
-        let size = imageCloned.getSize();
+        let size = graphicFillStyle.getSize();
         if (!size) {
             const iconSvg = OlStyleUtil.getBase64DecodedSvg(imageCloned.getSrc());
             const { dimensions } = getSvgProperties(iconSvg);

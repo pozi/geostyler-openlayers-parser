@@ -1310,7 +1310,7 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
     const pixelRatio = scale;
     imageCloned.setScale(1);
 
-    let size: [number, number] = imageCloned.getSize();
+    let size: [number, number] = graphicFillStyle.getSize();
     if (!size) {
       const iconSvg = OlStyleUtil.getBase64DecodedSvg(imageCloned.getSrc() as string);
       const { dimensions } = getSvgProperties(iconSvg);
