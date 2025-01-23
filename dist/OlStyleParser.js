@@ -1229,7 +1229,8 @@ export class OlStyleParser {
         });
         // Draw the graphic
         vectorContext.setStyle(graphicFillStyleCloned);
-        const pointCoords = size.map(item => item / 2);
+        // const pointCoords = size.map(item  => item / 2);
+        const pointCoords = [10, 10];
         vectorContext.drawGeometry(new OlGeomPoint(pointCoords));
         // Create the actual pattern and return style
         return tmpContext.createPattern(tmpCanvas, 'repeat');
