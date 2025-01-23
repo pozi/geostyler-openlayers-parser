@@ -12,6 +12,7 @@ import OlStyleIcon from 'ol/style/Icon';
 import OlStyleRegularshape from 'ol/style/RegularShape';
 import { METERS_PER_UNIT } from 'ol/proj/Units';
 import OlStyleUtil from './Util/OlStyleUtil';
+import { getShapeSvg, getSvgProperties, isPointSvgDefined, removeDuplicateShapes } from './Util/svgs';
 import { toContext } from 'ol/render';
 /**
  * This parser can be used with the GeoStyler.
@@ -270,21 +271,46 @@ export class OlStyleParser {
             const olIconStyle = olStyle.getImage();
             const displacement = olIconStyle.getDisplacement();
             // initialOptions_ as fallback when image is not yet loaded
-            const image = this.getImageFromIconStyle(olIconStyle);
             // this always gets calculated from ol so this might not have been set initially
             let size = olIconStyle.getWidth();
             const rotation = olIconStyle.getRotation() / Math.PI * 180;
             const opacity = olIconStyle.getOpacity();
-            const iconSymbolizer = {
-                kind: 'Icon',
-                image,
-                opacity: opacity < 1 ? opacity : undefined,
-                size,
-                // Rotation in openlayers is radians while we use degree
-                rotate: rotation !== 0 ? rotation : undefined,
-                offset: displacement[0] || displacement[1] ? displacement : undefined
-            };
-            pointSymbolizer = iconSymbolizer;
+            // If the image is an SVG string try to extract the properties and build a MarkSymbolizer
+            try {
+                const svgString = OlStyleUtil.getBase64DecodedSvg(olIconStyle.getSrc());
+                const { id, dimensions, fill, stroke, strokeWidth } = getSvgProperties(svgString);
+                const strokeOpacity = stroke
+                    ? OlStyleUtil.getOpacity(stroke) !== 1
+                        ? OlStyleUtil.getOpacity(stroke)
+                        : undefined
+                    : undefined;
+                pointSymbolizer = {
+                    kind: 'Mark',
+                    wellKnownName: id,
+                    ...fill && { color: fill },
+                    ...(opacity !== undefined && opacity !== 1 && { opacity }),
+                    ...stroke && { strokeColor: stroke.substring(0, 7) },
+                    ...strokeWidth !== undefined && { strokeWidth },
+                    ...strokeOpacity !== undefined && { strokeOpacity },
+                    ...(dimensions / 2 !== 0 && { radius: dimensions / 2 }),
+                    ...(rotation !== undefined && rotation !== 0 && { rotate: rotation }),
+                    ...((displacement[0] || displacement[1]) && { offset: displacement }),
+                };
+            }
+            catch {
+                // initialOptions_ as fallback when image is not yet loaded
+                const image = this.getImageFromIconStyle(olIconStyle);
+                const iconSymbolizer = {
+                    kind: 'Icon',
+                    image,
+                    opacity: opacity < 1 ? opacity : undefined,
+                    size,
+                    // Rotation in openlayers is radians while we use degree
+                    rotate: rotation !== 0 ? rotation : undefined,
+                    offset: displacement[0] || displacement[1] ? displacement : undefined
+                };
+                pointSymbolizer = iconSymbolizer;
+            }
         }
         return pointSymbolizer;
     }
@@ -938,9 +964,6 @@ export class OlStyleParser {
      * @return The OL Style object
      */
     getOlPointSymbolizerFromMarkSymbolizer(markSymbolizer, feature) {
-        let stroke;
-        // eslint-disable-next-line no-console
-        console.log('YYY', markSymbolizer);
         for (const key of Object.keys(markSymbolizer)) {
             if (isGeoStylerFunction(markSymbolizer[key])) {
                 markSymbolizer[key] = OlStyleUtil.evaluateFunction(markSymbolizer[key], feature);
@@ -948,198 +971,64 @@ export class OlStyleParser {
         }
         const strokeColor = markSymbolizer.strokeColor;
         const strokeOpacity = markSymbolizer.strokeOpacity;
-        const sColor = strokeColor && (strokeOpacity !== undefined)
-            ? OlStyleUtil.getRgbaColor(strokeColor, strokeOpacity)
-            : markSymbolizer.strokeColor;
-        if (markSymbolizer.strokeColor || markSymbolizer.strokeWidth !== undefined) {
-            stroke = new this.OlStyleStrokeConstructor({
-                color: sColor,
-                width: markSymbolizer.strokeWidth
+        const strokeWidth = markSymbolizer.strokeWidth;
+        const fillColor = markSymbolizer.color;
+        const fillOpacity = markSymbolizer.fillOpacity;
+        const rotation = (Number(markSymbolizer.rotate) * Math.PI) / 180;
+        const displacement = markSymbolizer.offset;
+        let olStyle;
+        let shape = removeDuplicateShapes(markSymbolizer.wellKnownName);
+        if (isPointSvgDefined(shape)) {
+            const dimensions = (markSymbolizer?.radius ?? 6) * 2; // Default to 12 pixels
+            const opacity = markSymbolizer.opacity;
+            const svgOpts = {
+                dimensions,
+                ...(fillColor && { fill: fillColor }),
+                ...(fillOpacity && { fillOpacity }),
+                ...(strokeColor && { stroke: strokeColor }),
+                ...(strokeWidth && { strokeWidth }),
+                ...(strokeOpacity && { strokeOpacity })
+            };
+            const svg = getShapeSvg(shape, svgOpts);
+            olStyle = new this.OlStyleConstructor({
+                image: new this.OlStyleIconConstructor({
+                    src: OlStyleUtil.getBase64EncodedSvg(svg),
+                    crossOrigin: 'anonymous',
+                    ...(displacement && { displacement }),
+                    ...(opacity && Number.isFinite(opacity) && { opacity }),
+                    ...(rotation && { rotation }),
+                    scale: 1,
+                }),
             });
         }
-        const color = markSymbolizer.color;
-        const opacity = markSymbolizer.opacity;
-        const radius = markSymbolizer.radius;
-        const fillOpacity = markSymbolizer.fillOpacity;
-        const fColor = color && (fillOpacity !== undefined)
-            ? OlStyleUtil.getRgbaColor(color, fillOpacity ?? 1)
-            : color;
-        const fill = new this.OlStyleFillConstructor({
-            color: fColor
-        });
-        let olStyle;
-        const shapeOpts = {
-            fill: fill,
-            radius: radius ?? 5,
-            rotation: typeof (markSymbolizer.rotate) === 'number' ? markSymbolizer.rotate * Math.PI / 180 : undefined,
-            stroke: stroke,
-            displacement: Array.isArray(markSymbolizer.offset) ? markSymbolizer.offset.map(Number) : undefined
-        };
-        switch (markSymbolizer.wellKnownName) {
-            case 'shape://dot':
-            case 'circle':
-                olStyle = new this.OlStyleConstructor({
-                    image: new this.OlStyleCircleConstructor(shapeOpts)
-                });
-                break;
-            case 'square':
-                olStyle = new this.OlStyleConstructor({
-                    image: new this.OlStyleRegularshapeConstructor({
-                        ...shapeOpts,
-                        points: 4,
-                        angle: 45 * Math.PI / 180
-                    })
-                });
-                break;
-            case 'triangle':
-                olStyle = new this.OlStyleConstructor({
-                    image: new this.OlStyleRegularshapeConstructor({
-                        ...shapeOpts,
-                        points: 3,
-                        angle: 0
-                    })
-                });
-                break;
-            case 'star':
-                olStyle = new this.OlStyleConstructor({
-                    image: new this.OlStyleRegularshapeConstructor({
-                        ...shapeOpts,
-                        points: 5,
-                        radius2: shapeOpts.radius / 2.5,
-                        angle: 0
-                    })
-                });
-                break;
-            case 'shape://plus':
-            case 'cross':
-                // openlayers does not seem to set a default stroke color,
-                // which is needed for regularshapes with radius2 = 0
-                if (shapeOpts.stroke === undefined) {
-                    shapeOpts.stroke = new this.OlStyleStrokeConstructor({
-                        color: '#000'
-                    });
-                }
-                olStyle = new this.OlStyleConstructor({
-                    image: new this.OlStyleRegularshapeConstructor({
-                        ...shapeOpts,
-                        points: 4,
-                        radius2: 0,
-                        angle: 0
-                    })
-                });
-                break;
-            case 'shape://times':
-            case 'x':
-                // openlayers does not seem to set a default stroke color,
-                // which is needed for regularshapes with radius2 = 0
-                if (shapeOpts.stroke === undefined) {
-                    shapeOpts.stroke = new this.OlStyleStrokeConstructor({
-                        color: '#000'
-                    });
-                }
-                olStyle = new this.OlStyleConstructor({
-                    image: new this.OlStyleRegularshapeConstructor({
-                        ...shapeOpts,
-                        points: 4,
-                        radius2: 0,
-                        angle: 45 * Math.PI / 180
-                    })
-                });
-                break;
-            case 'shape://backslash':
-                // openlayers does not seem to set a default stroke color,
-                // which is needed for regularshapes with radius2 = 0
-                if (shapeOpts.stroke === undefined) {
-                    shapeOpts.stroke = new this.OlStyleStrokeConstructor({
-                        color: '#000'
-                    });
-                }
-                olStyle = new this.OlStyleConstructor({
-                    image: new this.OlStyleRegularshapeConstructor({
-                        ...shapeOpts,
-                        points: 2,
-                        angle: 2 * Math.PI - (Math.PI / 4)
-                    })
-                });
-                break;
-            case 'shape://horline':
-                // openlayers does not seem to set a default stroke color,
-                // which is needed for regularshapes with radius2 = 0
-                if (shapeOpts.stroke === undefined) {
-                    shapeOpts.stroke = new this.OlStyleStrokeConstructor({
-                        color: '#000'
-                    });
-                }
-                olStyle = new this.OlStyleConstructor({
-                    image: new this.OlStyleRegularshapeConstructor({
-                        ...shapeOpts,
-                        points: 2,
-                        angle: Math.PI / 2
-                    })
-                });
-                break;
-            // so far, both arrows are closed arrows. Also, shape is a regular triangle with
-            // all sides of equal length. In geoserver arrows only have two sides of equal length.
-            // TODO redefine shapes of arrows?
-            case 'shape://oarrow':
-            case 'shape://carrow':
-                olStyle = new this.OlStyleConstructor({
-                    image: new this.OlStyleRegularshapeConstructor({
-                        ...shapeOpts,
-                        points: 3,
-                        angle: Math.PI / 2
-                    })
-                });
-                break;
-            case 'shape://slash':
-                // openlayers does not seem to set a default stroke color,
-                // which is needed for regularshapes with radius2 = 0
-                if (shapeOpts.stroke === undefined) {
-                    shapeOpts.stroke = new this.OlStyleStrokeConstructor({
-                        color: '#000'
-                    });
-                }
-                olStyle = new this.OlStyleConstructor({
-                    image: new this.OlStyleRegularshapeConstructor({
-                        ...shapeOpts,
-                        points: 2,
-                        angle: Math.PI / 4
-                    })
-                });
-                break;
-            case 'shape://vertline':
-                // openlayers does not seem to set a default stroke color,
-                // which is needed for regularshapes with radius2 = 0
-                if (shapeOpts.stroke === undefined) {
-                    shapeOpts.stroke = new this.OlStyleStrokeConstructor({
-                        color: '#000'
-                    });
-                }
-                olStyle = new this.OlStyleConstructor({
-                    image: new this.OlStyleRegularshapeConstructor({
-                        ...shapeOpts,
-                        points: 2,
-                        angle: 0
-                    })
-                });
-                break;
-            default:
-                if (OlStyleUtil.getIsFontGlyphBased(markSymbolizer)) {
-                    olStyle = new this.OlStyleConstructor({
-                        text: new this.OlStyleTextConstructor({
-                            text: OlStyleUtil.getCharacterForMarkSymbolizer(markSymbolizer),
-                            font: OlStyleUtil.getTextFontForMarkSymbolizer(markSymbolizer),
-                            fill: shapeOpts.fill,
-                            stroke: shapeOpts.stroke,
-                            rotation: shapeOpts.rotation
-                        })
-                    });
-                    break;
-                }
-                throw new Error('MarkSymbolizer cannot be parsed. Unsupported WellKnownName.');
+        else if (OlStyleUtil.getIsFontGlyphBased(markSymbolizer)) {
+            const strokeRgbaColor = (strokeColor && strokeOpacity ?
+                OlStyleUtil.getRgbaColor(strokeColor, strokeOpacity) :
+                strokeColor);
+            const fillRgbaColor = (fillColor && fillOpacity ?
+                OlStyleUtil.getRgbaColor(fillColor, fillOpacity) :
+                fillColor);
+            const stroke = new this.OlStyleStrokeConstructor({
+                ...(strokeRgbaColor && { color: strokeRgbaColor }),
+                ...(strokeWidth && { width: strokeWidth })
+            });
+            const fill = new this.OlStyleFillConstructor({
+                ...(fillRgbaColor && { color: fillRgbaColor })
+            });
+            olStyle = new this.OlStyleConstructor({
+                text: new this.OlStyleTextConstructor({
+                    text: OlStyleUtil.getCharacterForMarkSymbolizer(markSymbolizer),
+                    font: OlStyleUtil.getTextFontForMarkSymbolizer(markSymbolizer),
+                    ...(fill && { fill }),
+                    ...(displacement && { offsetX: displacement[0] }),
+                    ...(displacement && { offsetY: displacement[1] }),
+                    ...(stroke && { stroke }),
+                    ...(rotation && { rotation }),
+                })
+            });
         }
-        if (Number.isFinite(opacity) && olStyle.getImage()) {
-            olStyle.getImage().setOpacity(opacity);
+        else {
+            throw new Error('MarkSymbolizer cannot be parsed. Unsupported WellKnownName.');
         }
         return olStyle;
     }
@@ -1324,7 +1213,14 @@ export class OlStyleParser {
         const scale = imageCloned.getScale() || 1;
         const pixelRatio = scale;
         imageCloned.setScale(1);
-        const size = imageCloned.getSize();
+        let size = imageCloned.getSize();
+        if (!size) {
+            const iconSvg = OlStyleUtil.getBase64DecodedSvg(imageCloned.getSrc());
+            const { dimensions } = getSvgProperties(iconSvg);
+            if (dimensions) {
+                size = [dimensions, dimensions];
+            }
+        }
         // Create the context where we'll be drawing the style on
         const vectorContext = toContext(tmpContext, {
             pixelRatio,
