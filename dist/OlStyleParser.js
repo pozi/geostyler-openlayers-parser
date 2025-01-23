@@ -1196,7 +1196,7 @@ export class OlStyleParser {
             }
         }
         else if (isMarkSymbolizer(graphicFill)) {
-            graphicFillStyle = this.getOlPointSymbolizerFromMarkSymbolizer(graphicFill);
+            // graphicFillStyle = this.getOlPointSymbolizerFromMarkSymbolizer(graphicFill);
         }
         else {
             return null;

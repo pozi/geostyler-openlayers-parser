@@ -1290,7 +1290,7 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
         return null;
       }
     } else if (isMarkSymbolizer(graphicFill)) {
-      graphicFillStyle = this.getOlPointSymbolizerFromMarkSymbolizer(graphicFill);
+      // graphicFillStyle = this.getOlPointSymbolizerFromMarkSymbolizer(graphicFill);
     } else {
       return null;
     }
