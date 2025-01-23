@@ -831,6 +831,8 @@ describe('OlStyleParser implements StyleParser', () => {
     let { output: olStyle } = await styleParser.writeStyle(polygon_graphicfill_mark);
     olStyle = olStyle as OlStyle;
     expect(olStyle).toBeDefined();
+    // eslint-disable-next-line no-console
+    console.log('ZZZ - targetStyle1', olStyle.getFill()?.getColor());
 
     const olFill = olStyle.getFill();
     expect(olFill).toBeDefined();
