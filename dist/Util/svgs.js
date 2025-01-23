@@ -17,7 +17,11 @@
  *     - dimensions: The width and height of the resulting SVG. Default is '40'.
  * @returns {string} An SVG string for the given shape type with the specified options.
  */
-export const getShapeSvg = (shape = 'circle', { fill = '#fff', stroke = '#000', strokeWidth = '1', dimensions = 40 } = {}) => {
+export const getShapeSvg = (shape = 'circle', options = { dimensions: 40 }) => {
+    const { dimensions, fill, fillOpacity, stroke, strokeWidth, strokeOpacity } = options;
+    // Treat shape://dot and shape://plus as circle and cross respectively
+    shape = shape === 'shape://dot' ? 'circle' : shape;
+    shape = shape === 'shape://plus' ? 'cross' : shape;
     const svgHeader = '<svg xmlns="http://www.w3.org/2000/svg" ' +
         'width="' + dimensions + '" ' +
         'height="' + dimensions + '" ' +
@@ -148,31 +152,48 @@ export const getShapeSvg = (shape = 'circle', { fill = '#fff', stroke = '#000', 
     }
     // Depending on the shape definition use different SVG elements
     if (svgBody.startsWith('points=')) {
-        svgBody = '<polygon id = "' + shape + '" ' + svgBody;
+        svgBody = '<polygon id="' + shape + '" ' + svgBody;
     }
     else if (svgBody.startsWith('x=')) {
-        svgBody = '<rect id = "' + shape + '" ' + svgBody;
+        svgBody = '<rect id="' + shape + '" ' + svgBody;
     }
     else if (svgBody.startsWith('cx=')) {
-        svgBody = '<circle id = "' + shape + '" ' + svgBody;
+        svgBody = '<circle id="' + shape + '" ' + svgBody;
     }
     else {
-        svgBody = '<path id = "' + shape + '" ' + svgBody;
+        svgBody = '<path id="' + shape + '" ' + svgBody;
+    }
+    let svgStyle = '';
+    if (fill) {
+        svgStyle += 'fill:' + fill + '; ';
+    }
+    if (fillOpacity) {
+        svgStyle += 'fill-opacity:' + fillOpacity + '; ';
+    }
+    if (stroke) {
+        svgStyle += 'stroke:' + stroke + '; ';
+    }
+    if (strokeWidth !== undefined && strokeWidth !== 0) {
+        svgStyle += 'stroke-width:' + strokeWidth + '; ';
+    }
+    if (strokeOpacity) {
+        svgStyle += 'stroke-opacity:' + strokeOpacity + '; ';
     }
     // For shapes that are just lines, make fill equal to none
-    switch (shape) {
-        case 'arrowhead':
-        case 'cross':
-        case 'cross2':
-        case 'half_arc':
-        case 'line':
-        case 'quarter_arc':
-        case 'third_arc':
-            svgBody += 'style="fill: none; stroke: ' + stroke + '; stroke-width: ' + strokeWidth + ';" />';
-            break;
-        default:
-            svgBody += 'style="fill: ' + fill + '; stroke: ' + stroke + '; stroke-width: ' + strokeWidth + ';" />';
-    }
+    // switch (shape) {
+    //   case 'arrowhead':
+    //   case 'cross':
+    //   case 'cross2':
+    //   case 'half_arc':
+    //   case 'line':
+    //   case 'quarter_arc':
+    //   case 'third_arc':
+    //     svgBody += 'style="fill:none; stroke:' + stroke + '; stroke-width:' + strokeWidth + ';" />';
+    //     break;
+    //   default:
+    //     svgBody += 'style="' + svgStyle.trim() + '" />';
+    // }
+    svgBody += 'style="' + svgStyle.trim() + '" />';
     return svgHeader + svgBody + svgFooter;
 };
 /**
@@ -198,6 +219,9 @@ export const getSvgProperties = (svgString) => {
         }
         // If <svg> exists, return the value of the 'width' attribute
         const width = svgElement?.getAttribute('width');
+        if (!width) {
+            throw new Error('<svg> element must include dimensions (no width attribute exists)');
+        }
         // Get the first child element of <svg>
         const firstChildElement = Array.from(svgElement?.children).find((child) => {
             return child instanceof Element;
@@ -216,11 +240,13 @@ export const getSvgProperties = (svgString) => {
             }
         }
         const svgOpts = {
-            id: id,
-            dimensions: Number(width) ? Number(width) : 0,
-            fill: styleMap.fill || '',
-            stroke: styleMap.stroke || '',
-            strokeWidth: styleMap['stroke-width'] || ''
+            id,
+            dimensions: Number(width),
+            ...(styleMap.fill && { fill: styleMap.fill }),
+            ...(styleMap['fill-opacity'] && { fillOpacity: Number(styleMap['fill-opacity']) }),
+            ...(styleMap.stroke && { stroke: styleMap.stroke }),
+            ...(styleMap['stroke-width'] && { strokeWidth: Number(styleMap['stroke-width']) }),
+            ...(styleMap['stroke-opacity'] && { strokeOpacity: Number(styleMap['stroke-opacity']) })
         };
         return svgOpts;
     }

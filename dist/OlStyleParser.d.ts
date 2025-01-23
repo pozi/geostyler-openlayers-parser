@@ -126,7 +126,7 @@ export declare class OlStyleParser implements StyleParser<OlStyleLike> {
      * @param geoStylerStyle A GeoStyler-Style Style.
      * @return The Promise resolving with one of above mentioned style types.
      */
-    writeStyle(geoStylerStyle: Style): Promise<WriteStyleResult<OlStyle | OlStyle[] | OlParserStyleFct>>;
+    writeStyle(geoStylerStyle: Style): Promise<WriteStyleResult<OlStyleLike>>;
     checkForUnsupportedProperties(geoStylerStyle: Style): UnsupportedProperties | undefined;
     /**
      * Decides which OlStyleType should be returned depending on given geoStylerStyle.
@@ -140,7 +140,7 @@ export declare class OlStyleParser implements StyleParser<OlStyleLike> {
      *
      * @param geoStylerStyle A GeoStyler-Style Style
      */
-    getOlStyleTypeFromGeoStylerStyle(geoStylerStyle: Style): OlStyle | OlStyle[] | OlParserStyleFct;
+    getOlStyleTypeFromGeoStylerStyle(geoStylerStyle: Style): OlStyleLike | OlParserStyleFct;
     /**
      * Parses the first symbolizer of the first rule of a GeoStyler-Style Style.
      *

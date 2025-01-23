@@ -3,8 +3,6 @@ import 'regenerator-runtime/runtime';
 import OlStyle, {
   Options as StyleOptions
 } from 'ol/style/Style';
-import OlStyleCircle from 'ol/style/Circle';
-import OlStyleRegularshape from 'ol/style/RegularShape';
 import OlStyleIcon from 'ol/style/Icon';
 import OlStyleText, { Options as TextOptions } from 'ol/style/Text';
 import OlStyleFill, { Options as FillOptions } from 'ol/style/Fill';
@@ -106,8 +104,7 @@ import {
 } from 'geostyler-style/dist/style';
 
 import OlStyleUtil from './Util/OlStyleUtil';
-import exp from 'constants';
-import { getSvgProperties } from './Util/svgs';
+import { getSvgProperties, removeDuplicateShapes } from './Util/svgs';
 
 // reverse calculation of resolution for scale (from ol-util MapUtil)
 function getResolutionForScale (scale, units) {
@@ -195,60 +192,61 @@ describe('OlStyleParser implements StyleParser', () => {
     it('can read an OpenLayers MarkSymbolizer as WellKnownName X', async () => {
       const { output: geoStylerStyle } = await styleParser.readStyle(ol_point_simplex);
       expect(geoStylerStyle).toBeDefined();
-      expect(geoStylerStyle).toEqual(point_simplex);
+      expect(JSON.stringify(geoStylerStyle).replace('cross2', 'x')).toEqual(JSON.stringify(point_simplex));
     });
     it('can read an OpenLayers MarkSymbolizer as WellKnownName shape://slash', async () => {
       const { output: geoStylerStyle } = await styleParser.readStyle(ol_point_simpleslash);
       expect(geoStylerStyle).toBeDefined();
-      expect(geoStylerStyle).toEqual(point_simpleslash);
+      expect(JSON.stringify(geoStylerStyle).replace('slash', 'shape://slash'))
+        .toEqual(JSON.stringify(point_simpleslash));
     });
     it('can read an OpenLayers MarkSymbolizer as WellKnownName shape://backslash', async () => {
       const { output: geoStylerStyle } = await styleParser.readStyle(ol_point_simplebackslash);
       expect(geoStylerStyle).toBeDefined();
-      expect(geoStylerStyle).toEqual(point_simplebackslash);
+      expect(JSON.stringify(geoStylerStyle).replace('backslash', 'shape://backslash'))
+        .toEqual(JSON.stringify(point_simplebackslash));
     });
     it('can read an OpenLayers MarkSymbolizer as WellKnownName shape://vertline', async () => {
       const { output: geoStylerStyle } = await styleParser.readStyle(ol_point_simplevertline);
       expect(geoStylerStyle).toBeDefined();
-      expect(geoStylerStyle).toEqual(point_simplevertline);
+      expect(JSON.stringify(geoStylerStyle).replace('line', 'shape://vertline'))
+        .toEqual(JSON.stringify(point_simplevertline));
     });
     it('can read an OpenLayers MarkSymbolizer as WellKnownName shape://horline', async () => {
       const { output: geoStylerStyle } = await styleParser.readStyle(ol_point_simplehorline);
       expect(geoStylerStyle).toBeDefined();
-      expect(geoStylerStyle).toEqual(point_simplehorline);
+      expect(JSON.stringify(geoStylerStyle).replace('horline', 'shape://horline'))
+        .toEqual(JSON.stringify(point_simplehorline));
     });
     it('can read an OpenLayers MarkSymbolizer as WellKnownName shape://carrow', async () => {
       const { output: geoStylerStyle } = await styleParser.readStyle(ol_point_simplecarrow);
       expect(geoStylerStyle).toBeDefined();
-      expect(geoStylerStyle).toEqual(point_simplecarrow);
+      expect(JSON.stringify(geoStylerStyle).replace('carrow', 'shape://carrow'))
+        .toEqual(JSON.stringify(point_simplecarrow));
     });
     it('can read an OpenLayers MarkSymbolizer as WellKnownName shape://oarrow', async () => {
       const { output: geoStylerStyle } = await styleParser.readStyle(ol_point_simpleoarrow);
       expect(geoStylerStyle).toBeDefined();
-      // using point_simplecarrow here since reading OlStyle cannot distinguish
-      // between carrow and oarrow
-      expect(geoStylerStyle).toEqual(point_simplecarrow);
+      expect(JSON.stringify(geoStylerStyle).replace('oarrow', 'shape://oarrow'))
+        .toEqual(JSON.stringify(point_simpleoarrow));
     });
     it('can read an OpenLayers MarkSymbolizer as WellKnownName shape://dot', async () => {
       const { output: geoStylerStyle } = await styleParser.readStyle(ol_point_simpledot);
       expect(geoStylerStyle).toBeDefined();
-      // using point_simplepoint here since reading OlStyle cannot distinguish
-      // between circle and dot
-      expect(geoStylerStyle).toEqual(point_simplepoint);
+      expect(JSON.stringify(geoStylerStyle).replace('circle', 'shape://dot'))
+        .toEqual(JSON.stringify(point_simpledot));
     });
     it('can read an OpenLayers MarkSymbolizer as WellKnownName shape://plus', async () => {
       const { output: geoStylerStyle } = await styleParser.readStyle(ol_point_simpleplus);
       expect(geoStylerStyle).toBeDefined();
-      // using point_simplecross here since reading OlStyle cannot distinguish
-      // between cross and plus
-      expect(geoStylerStyle).toEqual(point_simplecross);
+      expect(JSON.stringify(geoStylerStyle).replace('cross', 'shape://plus'))
+        .toEqual(JSON.stringify(point_simpleplus));
     });
     it('can read an OpenLayers MarkSymbolizer as WellKnownName shape://times', async () => {
       const { output: geoStylerStyle } = await styleParser.readStyle(ol_point_simpletimes);
       expect(geoStylerStyle).toBeDefined();
-      // using point_simplex here since reading OlStyle cannot distinguish
-      // between x and times
-      expect(geoStylerStyle).toEqual(point_simplex);
+      expect(JSON.stringify(geoStylerStyle).replace('cross2', 'shape://times'))
+        .toEqual(JSON.stringify(point_simpletimes));
     });
     it('can read an OpenLayers LineSymbolizer', async () => {
       const { output: geoStylerStyle } = await styleParser.readStyle(ol_line_simpleline);
@@ -530,291 +528,249 @@ describe('OlStyleParser implements StyleParser', () => {
       expect(olIcon.getSrc()).toEqual(dummyFeat.get('path'));
     });
   });
-  it('can write an OpenLayers RegularShape square', async () => {
+  it('can write an OpenLayers Marker square', async () => {
     let { output: olStyle } = await styleParser.writeStyle(point_simplesquare);
     olStyle = olStyle as OlStyle;
     expect(olStyle).toBeDefined();
 
     const expecSymb = point_simplesquare.rules[0].symbolizers[0] as MarkSymbolizer;
-    const olSquare: OlStyleRegularshape = olStyle.getImage() as OlStyleRegularshape;
+    const olSquare = olStyle.getImage() as OlStyleIcon;
     expect(olSquare).toBeDefined();
 
-    // expect(olSquare.getPoints()).toBeCloseTo(4);
-    // expect(olSquare.getRadius()).toBeCloseTo(expecSymb.radius as number);
-    // expect(olSquare.getAngle()).toBeCloseTo(45 * Math.PI / 180);
-    // expect(olSquare.getRotation()).toBeCloseTo((expecSymb.rotate as number) * Math.PI / 180);
+    const svgString = OlStyleUtil.getBase64DecodedSvg(olSquare.getSrc() as string);
+    const { id, dimensions, fill } = getSvgProperties(svgString);
 
-    // const olSquareFill = olSquare.getFill();
-    // expect(olSquareFill).toBeDefined();
-    // expect(olSquareFill?.getColor()).toEqual(expecSymb.color);
+    expect(id).toEqual(expecSymb.wellKnownName);
+    expect((dimensions / 2)).toBeCloseTo(expecSymb.radius as number);
+    expect(fill).toEqual(expecSymb.color);
+    expect(JSON.stringify(ol_point_simplesquare)).toEqual(JSON.stringify(olStyle));
   });
-  it('can write an OpenLayers RegularShape star', async () => {
+  it('can write an OpenLayers Marker star', async () => {
     let { output: olStyle } = await styleParser.writeStyle(point_simplestar);
     olStyle = olStyle as OlStyle;
     expect(olStyle).toBeDefined();
 
     const expecSymb = point_simplestar.rules[0].symbolizers[0] as MarkSymbolizer;
-    const olStar: OlStyleRegularshape = olStyle.getImage() as OlStyleRegularshape;
+    const olStar = olStyle.getImage() as OlStyleIcon;
     expect(olStar).toBeDefined();
 
-    // expecSymb.radius = expecSymb.radius as number;
-    // expecSymb.rotate = expecSymb.rotate as number;
+    const svgString = OlStyleUtil.getBase64DecodedSvg(olStar.getSrc() as string);
+    const { id, dimensions, fill } = getSvgProperties(svgString);
 
-    // expect(olStar.getPoints()).toBeCloseTo(5);
-    // expect(olStar.getRadius()).toBeCloseTo(expecSymb.radius as number);
-    // expect(olStar.getRadius2()).toBeCloseTo(expecSymb.radius / 2.5);
-    // expect(olStar.getAngle()).toBeCloseTo(0);
-    // expect(olStar.getRotation()).toBeCloseTo(expecSymb.rotate * Math.PI / 180);
-
-    // const olStarFill = olStar.getFill();
-    // expect(olStarFill).toBeDefined();
-    // expect(olStarFill?.getColor()).toEqual(expecSymb.color);
+    expect(id).toEqual(expecSymb.wellKnownName);
+    expect((dimensions / 2)).toBeCloseTo(expecSymb.radius as number);
+    expect(fill).toEqual(expecSymb.color);
+    expect(JSON.stringify(ol_point_simplestar)).toEqual(JSON.stringify(olStyle));
   });
-  it('can write an OpenLayers RegularShape triangle', async () => {
+  it('can write an OpenLayers Marker triangle', async () => {
     let { output: olStyle } = await styleParser.writeStyle(point_simpletriangle);
     olStyle = olStyle as OlStyle;
     expect(olStyle).toBeDefined();
 
     const expecSymb = point_simpletriangle.rules[0].symbolizers[0] as MarkSymbolizer;
-    const olTriangle: OlStyleRegularshape = olStyle.getImage() as OlStyleRegularshape;
+    const olTriangle = olStyle.getImage() as OlStyleIcon;
     expect(olTriangle).toBeDefined();
 
-    // expecSymb.radius = expecSymb.radius as number;
-    // expecSymb.rotate = expecSymb.rotate as number;
+    const svgString = OlStyleUtil.getBase64DecodedSvg(olTriangle.getSrc() as string);
+    const { id, dimensions, fill } = getSvgProperties(svgString);
 
-    // expect(olTriangle.getPoints()).toBeCloseTo(3);
-    // expect(olTriangle.getRadius()).toBeCloseTo(expecSymb.radius);
-    // expect(olTriangle.getAngle()).toBeCloseTo(0);
-    // expect(olTriangle.getRotation()).toBeCloseTo(expecSymb.rotate * Math.PI / 180);
-
-    // const olTriangleFill = olTriangle.getFill();
-    // expect(olTriangleFill).toBeDefined();
-    // expect(olTriangleFill?.getColor()).toEqual(expecSymb.color);
+    expect(id).toEqual(expecSymb.wellKnownName);
+    expect((dimensions / 2)).toBeCloseTo(expecSymb.radius as number);
+    expect(fill).toEqual(expecSymb.color);
+    expect(JSON.stringify(ol_point_simpletriangle)).toEqual(JSON.stringify(olStyle));
   });
-  it('can write an OpenLayers RegularShape cross', async () => {
+  it('can write an OpenLayers Marker cross', async () => {
     let { output: olStyle } = await styleParser.writeStyle(point_simplecross);
     olStyle = olStyle as OlStyle;
     expect(olStyle).toBeDefined();
 
     const expecSymb = point_simplecross.rules[0].symbolizers[0] as MarkSymbolizer;
-    const olCross: OlStyleRegularshape = olStyle.getImage() as OlStyleRegularshape;
+    const olCross = olStyle.getImage() as OlStyleIcon;
     expect(olCross).toBeDefined();
 
-    // expecSymb.radius = expecSymb.radius as number;
-    // expecSymb.rotate = expecSymb.rotate as number;
+    const svgString = OlStyleUtil.getBase64DecodedSvg(olCross.getSrc() as string);
+    const { id, dimensions, stroke } = getSvgProperties(svgString);
 
-    // expect(olCross.getPoints()).toBeCloseTo(4);
-    // expect(olCross.getRadius()).toBeCloseTo(expecSymb.radius);
-    // expect(olCross.getRadius2()).toBeCloseTo(0);
-    // expect(olCross.getAngle()).toBeCloseTo(0);
-    // expect(olCross.getRotation()).toBeCloseTo(expecSymb.rotate * Math.PI / 180);
-
-    // const olCrossFill = olCross.getFill();
-    // expect(olCrossFill).toBeDefined();
-    // expect(olCrossFill?.getColor()).toEqual(expecSymb.color);
+    expect(id).toEqual(expecSymb.wellKnownName);
+    expect((dimensions / 2)).toBeCloseTo(expecSymb.radius as number);
+    expect(stroke).toEqual(expecSymb.strokeColor);
+    expect(JSON.stringify(ol_point_simplecross)).toEqual(JSON.stringify(olStyle));
   });
-  it('can write an OpenLayers RegularShape x', async () => {
+  it('can write an OpenLayers Marker x', async () => {
     let { output: olStyle } = await styleParser.writeStyle(point_simplex);
     olStyle = olStyle as OlStyle;
     expect(olStyle).toBeDefined();
 
     const expecSymb = point_simplex.rules[0].symbolizers[0] as MarkSymbolizer;
-    const olX: OlStyleRegularshape = olStyle.getImage() as OlStyleRegularshape;
+    const olX = olStyle.getImage() as OlStyleIcon;
     expect(olX).toBeDefined();
 
-    // expecSymb.radius = expecSymb.radius as number;
-    // expecSymb.rotate = expecSymb.rotate as number;
+    const svgString = OlStyleUtil.getBase64DecodedSvg(olX.getSrc() as string);
+    const { id, dimensions, stroke } = getSvgProperties(svgString);
 
-    // expect(olX.getPoints()).toBeCloseTo(4);
-    // expect(olX.getRadius()).toBeCloseTo(expecSymb.radius);
-    // expect(olX.getRadius2()).toBeCloseTo(0);
-    // expect(olX.getAngle()).toBeCloseTo(45 * Math.PI / 180);
-    // expect(olX.getRotation()).toBeCloseTo(expecSymb.rotate * Math.PI / 180);
-
-    // const olXFill = olX.getFill();
-    // expect(olXFill).toBeDefined();
-    // expect(olXFill?.getColor()).toEqual(expecSymb.color);
+    expect(id).toEqual(removeDuplicateShapes(expecSymb.wellKnownName));
+    expect((dimensions / 2)).toBeCloseTo(expecSymb.radius as number);
+    expect(stroke).toEqual(expecSymb.strokeColor);
+    expect(JSON.stringify(ol_point_simplex).replace('cross2', 'x')).toEqual(JSON.stringify(olStyle));
   });
-  it('can write an OpenLayers RegularShape shape://slash', async () => {
+  it('can write an OpenLayers Marker shape://slash', async () => {
     let { output: olStyle } = await styleParser.writeStyle(point_simpleslash);
     olStyle = olStyle as OlStyle;
     expect(olStyle).toBeDefined();
 
     const expecSymb = point_simpleslash.rules[0].symbolizers[0] as MarkSymbolizer;
-    const olSlash: OlStyleRegularshape = olStyle.getImage() as OlStyleRegularshape;
+    const olSlash = olStyle.getImage() as OlStyleIcon;
     expect(olSlash).toBeDefined();
 
-    // expecSymb.radius = expecSymb.radius as number;
-    // expecSymb.rotate = expecSymb.rotate as number;
+    const svgString = OlStyleUtil.getBase64DecodedSvg(olSlash.getSrc() as string);
+    const { id, dimensions, stroke } = getSvgProperties(svgString);
 
-    // expect(olSlash.getPoints()).toBeCloseTo(2);
-    // expect(olSlash.getRadius()).toBeCloseTo(expecSymb.radius);
-    // expect(olSlash.getAngle()).toBeCloseTo(Math.PI / 4);
-    // expect(olSlash.getRotation()).toBeCloseTo(expecSymb.rotate * Math.PI / 180);
-
-    // const olSlashFill = olSlash.getFill();
-    // expect(olSlashFill).toBeDefined();
-    // expect(olSlashFill?.getColor()).toEqual(expecSymb.color);
+    expect(id).toEqual(removeDuplicateShapes(expecSymb.wellKnownName));
+    expect((dimensions / 2)).toBeCloseTo(expecSymb.radius as number);
+    expect(stroke).toEqual(expecSymb.strokeColor);
+    expect(JSON.stringify(ol_point_simpleslash).replace('slash', 'shape://slash')).toEqual(JSON.stringify(olStyle));
   });
-  it('can write an OpenLayers RegularShape shape://backslash', async () => {
+  it('can write an OpenLayers Marker shape://backslash', async () => {
     let { output: olStyle } = await styleParser.writeStyle(point_simplebackslash);
     olStyle = olStyle as OlStyle;
     expect(olStyle).toBeDefined();
 
     const expecSymb = point_simplebackslash.rules[0].symbolizers[0] as MarkSymbolizer;
-    const olBackSlash: OlStyleRegularshape = olStyle.getImage() as OlStyleRegularshape;
+    const olBackSlash = olStyle.getImage() as OlStyleIcon;
     expect(olBackSlash).toBeDefined();
 
-    expecSymb.radius = expecSymb.radius as number;
-    expecSymb.rotate = expecSymb.rotate as number;
+    const svgString = OlStyleUtil.getBase64DecodedSvg(olBackSlash.getSrc() as string);
+    const { id, dimensions, stroke } = getSvgProperties(svgString);
 
-    expect(olBackSlash.getPoints()).toBeCloseTo(2);
-    expect(olBackSlash.getRadius()).toBeCloseTo(expecSymb.radius);
-    expect(olBackSlash.getAngle()).toBeCloseTo(2 * Math.PI - (Math.PI / 4));
-    expect(olBackSlash.getRotation()).toBeCloseTo(expecSymb.rotate * Math.PI / 180);
-
-    const olBackSlashFill = olBackSlash.getFill();
-    expect(olBackSlashFill).toBeDefined();
-    expect(olBackSlashFill?.getColor()).toEqual(expecSymb.color);
+    expect(id).toEqual(removeDuplicateShapes(expecSymb.wellKnownName));
+    expect((dimensions / 2)).toBeCloseTo(expecSymb.radius as number);
+    expect(stroke).toEqual(expecSymb.strokeColor);
+    expect(JSON.stringify(ol_point_simplebackslash).replace('backslash', 'shape://backslash'))
+      .toEqual(JSON.stringify(olStyle));
   });
-  it('can write an OpenLayers RegularShape shape://vertline', async () => {
+  it('can write an OpenLayers Marker shape://vertline', async () => {
     let { output: olStyle } = await styleParser.writeStyle(point_simplevertline);
     olStyle = olStyle as OlStyle;
     expect(olStyle).toBeDefined();
 
     const expecSymb = point_simplevertline.rules[0].symbolizers[0] as MarkSymbolizer;
-    const olVertline: OlStyleRegularshape = olStyle.getImage() as OlStyleRegularshape;
+    const olVertline = olStyle.getImage() as OlStyleIcon;
     expect(olVertline).toBeDefined();
 
-    expecSymb.radius = expecSymb.radius as number;
-    expecSymb.rotate = expecSymb.rotate as number;
+    const svgString = OlStyleUtil.getBase64DecodedSvg(olVertline.getSrc() as string);
+    const { id, dimensions, stroke } = getSvgProperties(svgString);
 
-    expect(olVertline.getPoints()).toBeCloseTo(2);
-    expect(olVertline.getRadius()).toBeCloseTo(expecSymb.radius);
-    expect(olVertline.getAngle()).toBeCloseTo(0, 0);
-    expect(olVertline.getRotation()).toBeCloseTo(expecSymb.rotate * Math.PI / 180);
-
-    const olVertlineFill = olVertline.getFill();
-    expect(olVertlineFill).toBeDefined();
-    expect(olVertlineFill?.getColor()).toEqual(expecSymb.color);
+    expect(id).toEqual(removeDuplicateShapes(expecSymb.wellKnownName));
+    expect((dimensions / 2)).toBeCloseTo(expecSymb.radius as number);
+    expect(stroke).toEqual(expecSymb.strokeColor);
+    expect(JSON.stringify(ol_point_simplevertline).replace('line', 'shape://vertline'))
+      .toEqual(JSON.stringify(olStyle));
   });
-  it('can write an OpenLayers RegularShape shape://horline', async () => {
+  it('can write an OpenLayers Marker shape://horline', async () => {
     let { output: olStyle } = await styleParser.writeStyle(point_simplehorline);
     olStyle = olStyle as OlStyle;
     expect(olStyle).toBeDefined();
 
     const expecSymb = point_simplehorline.rules[0].symbolizers[0] as MarkSymbolizer;
-    const olHorline: OlStyleRegularshape = olStyle.getImage() as OlStyleRegularshape;
+    const olHorline = olStyle.getImage() as OlStyleIcon;
     expect(olHorline).toBeDefined();
 
-    expecSymb.radius = expecSymb.radius as number;
-    expecSymb.rotate = expecSymb.rotate as number;
+    const svgString = OlStyleUtil.getBase64DecodedSvg(olHorline.getSrc() as string);
+    const { id, dimensions, stroke } = getSvgProperties(svgString);
 
-    expect(olHorline.getPoints()).toBeCloseTo(2);
-    expect(olHorline.getRadius()).toBeCloseTo(expecSymb.radius);
-    expect(olHorline.getAngle()).toBeCloseTo(Math.PI / 2);
-    expect(olHorline.getRotation()).toBeCloseTo(expecSymb.rotate * Math.PI / 180);
-
-    const olHorlineFill = olHorline.getFill();
-    expect(olHorlineFill).toBeDefined();
-    expect(olHorlineFill?.getColor()).toEqual(expecSymb.color);
+    expect(id).toEqual(removeDuplicateShapes(expecSymb.wellKnownName));
+    expect((dimensions / 2)).toBeCloseTo(expecSymb.radius as number);
+    expect(stroke).toEqual(expecSymb.strokeColor);
+    expect(JSON.stringify(ol_point_simplehorline).replace('horline', 'shape://horline'))
+      .toEqual(JSON.stringify(olStyle));
   });
-  it('can write an OpenLayers RegularShape shape://carrow', async () => {
+  it('can write an OpenLayers Marker shape://carrow', async () => {
     let { output: olStyle } = await styleParser.writeStyle(point_simplecarrow);
     olStyle = olStyle as OlStyle;
     expect(olStyle).toBeDefined();
 
     const expecSymb = point_simplecarrow.rules[0].symbolizers[0] as MarkSymbolizer;
-    const olCarrow: OlStyleRegularshape = olStyle.getImage() as OlStyleRegularshape;
+    const olCarrow = olStyle.getImage() as OlStyleIcon;
     expect(olCarrow).toBeDefined();
 
-    expecSymb.radius = expecSymb.radius as number;
-    expecSymb.rotate = expecSymb.rotate as number;
+    const svgString = OlStyleUtil.getBase64DecodedSvg(olCarrow.getSrc() as string);
+    const { id, dimensions, fill } = getSvgProperties(svgString);
 
-    expect(olCarrow.getPoints()).toBeCloseTo(3);
-    expect(olCarrow.getRadius()).toBeCloseTo(expecSymb.radius);
-    expect(olCarrow.getAngle()).toBeCloseTo(Math.PI / 2);
-    expect(olCarrow.getRotation()).toBeCloseTo(expecSymb.rotate * Math.PI / 180);
-
-    const olCarrowFill = olCarrow.getFill();
-    expect(olCarrowFill).toBeDefined();
-    expect(olCarrowFill?.getColor()).toEqual(expecSymb.color);
+    expect(id).toEqual(removeDuplicateShapes(expecSymb.wellKnownName));
+    expect((dimensions / 2)).toBeCloseTo(expecSymb.radius as number);
+    expect(fill).toEqual(expecSymb.color);
+    expect(JSON.stringify(ol_point_simplecarrow).replace('carrow', 'shape://carrow'))
+      .toEqual(JSON.stringify(olStyle));
   });
-  it('can write an OpenLayers RegularShape shape://oarrow', async() => {
+  it('can write an OpenLayers Marker shape://oarrow', async() => {
     let { output: olStyle } = await styleParser.writeStyle(point_simpleoarrow);
     olStyle = olStyle as OlStyle;
     expect(olStyle).toBeDefined();
 
     const expecSymb = point_simpleoarrow.rules[0].symbolizers[0] as MarkSymbolizer;
-    const olOarrow: OlStyleRegularshape = olStyle.getImage() as OlStyleRegularshape;
+    const olOarrow = olStyle.getImage() as OlStyleIcon;
     expect(olOarrow).toBeDefined();
 
-    expecSymb.radius = expecSymb.radius as number;
-    expecSymb.rotate = expecSymb.rotate as number;
+    const svgString = OlStyleUtil.getBase64DecodedSvg(olOarrow.getSrc() as string);
+    const { id, dimensions, stroke } = getSvgProperties(svgString);
 
-    expect(olOarrow.getPoints()).toBeCloseTo(3);
-    expect(olOarrow.getRadius()).toBeCloseTo(expecSymb.radius);
-    expect(olOarrow.getAngle()).toBeCloseTo(Math.PI / 2);
-    expect(olOarrow.getRotation()).toBeCloseTo(expecSymb.rotate * Math.PI / 180);
-
-    const olOarrowFill = olOarrow.getFill();
-    expect(olOarrowFill).toBeDefined();
-    expect(olOarrowFill?.getColor()).toEqual(expecSymb.color);
+    expect(id).toEqual(removeDuplicateShapes(expecSymb.wellKnownName));
+    expect((dimensions / 2)).toBeCloseTo(expecSymb.radius as number);
+    expect(stroke).toEqual(expecSymb.strokeColor);
+    expect(JSON.stringify(ol_point_simpleoarrow).replace('oarrow', 'shape://oarrow'))
+      .toEqual(JSON.stringify(olStyle));
   });
-  it('can write an OpenLayers RegularShape shape://dot', async () => {
+  it('can write an OpenLayers Marker shape://dot', async () => {
     let { output: olStyle } = await styleParser.writeStyle(point_simpledot);
     olStyle = olStyle as OlStyle;
     expect(olStyle).toBeDefined();
 
     const expecSymb = point_simpledot.rules[0].symbolizers[0] as MarkSymbolizer;
-    const olDot: OlStyleIcon = olStyle.getImage() as OlStyleIcon;
-    const olDotSvg = OlStyleUtil.getBase64DecodedSvg(olDot.getSrc() as string);
+    const olDot = olStyle.getImage() as OlStyleIcon;
     expect(olDot).toBeDefined();
 
-    const { dimensions, fill } = getSvgProperties(olDotSvg);
-    expecSymb.radius = expecSymb.radius as number;
+    const svgString = OlStyleUtil.getBase64DecodedSvg(olDot.getSrc() as string);
+    const { id, dimensions, fill } = getSvgProperties(svgString);
 
-    expect(dimensions / 2).toBeCloseTo(expecSymb.radius);
+    expect(id).toEqual(removeDuplicateShapes(expecSymb.wellKnownName));
+    expect((dimensions / 2)).toBeCloseTo(expecSymb.radius as number);
     expect(fill).toEqual(expecSymb.color);
+    expect(JSON.stringify(ol_point_simpledot)).toEqual(JSON.stringify(olStyle));
   });
-  it('can write an OpenLayers RegularShape shape://plus', async () => {
+  it('can write an OpenLayers Marker shape://plus', async () => {
     let { output: olStyle } = await styleParser.writeStyle(point_simpleplus);
     olStyle = olStyle as OlStyle;
     expect(olStyle).toBeDefined();
 
     const expecSymb = point_simpleplus.rules[0].symbolizers[0] as MarkSymbolizer;
-    const olPlus: OlStyleIcon = olStyle.getImage() as OlStyleIcon;
-    const olPlusSvg = OlStyleUtil.getBase64DecodedSvg(olPlus.getSrc() as string);
+    const olPlus = olStyle.getImage() as OlStyleIcon;
     expect(olPlus).toBeDefined();
 
-    const { dimensions, stroke } = getSvgProperties(olPlusSvg);
-    expecSymb.radius = expecSymb.radius as number;
+    const svgString = OlStyleUtil.getBase64DecodedSvg(olPlus.getSrc() as string);
+    const { id, dimensions, stroke } = getSvgProperties(svgString);
 
-    expect(dimensions / 2).toBeCloseTo(expecSymb.radius);
+    expect(id).toEqual(removeDuplicateShapes(expecSymb.wellKnownName));
+    expect((dimensions / 2)).toBeCloseTo(expecSymb.radius as number);
     expect(stroke).toEqual(expecSymb.strokeColor);
+    expect(JSON.stringify(ol_point_simpleplus)).toEqual(JSON.stringify(olStyle));
   });
-  it('can write an OpenLayers RegularShape shape://times', async () => {
+  it('can write an OpenLayers Marker shape://times', async () => {
     let { output: olStyle } = await styleParser.writeStyle(point_simpletimes);
-
     olStyle = olStyle as OlStyle;
     expect(olStyle).toBeDefined();
 
     const expecSymb = point_simpletimes.rules[0].symbolizers[0] as MarkSymbolizer;
-    const olTimes: OlStyleRegularshape = olStyle.getImage() as OlStyleRegularshape;
+    const olTimes = olStyle.getImage() as OlStyleIcon;
     expect(olTimes).toBeDefined();
 
-    expecSymb.radius = expecSymb.radius as number;
-    expecSymb.rotate = expecSymb.rotate as number;
+    const svgString = OlStyleUtil.getBase64DecodedSvg(olTimes.getSrc() as string);
+    const { id, dimensions, stroke } = getSvgProperties(svgString);
 
-    expect(olTimes.getPoints()).toBeCloseTo(4);
-    expect(olTimes.getRadius()).toBeCloseTo(expecSymb.radius);
-    expect(olTimes.getRadius2()).toBeCloseTo(0);
-    expect(olTimes.getAngle()).toBeCloseTo(45 * Math.PI / 180);
-    expect(olTimes.getRotation()).toBeCloseTo(expecSymb.rotate * Math.PI / 180);
-
-    const olTimesFill = olTimes.getFill();
-    expect(olTimesFill).toBeDefined();
-    expect(olTimesFill?.getColor()).toEqual(expecSymb.color);
+    expect(id).toEqual(removeDuplicateShapes(expecSymb.wellKnownName));
+    expect((dimensions / 2)).toBeCloseTo(expecSymb.radius as number);
+    expect(stroke).toEqual(expecSymb.strokeColor);
+    expect(JSON.stringify(ol_point_simpletimes).replace('cross2', 'shape://times'))
+      .toEqual(JSON.stringify(olStyle));
   });
   it('can write an OpenLayers Style based on a font glyph (WellKnownName starts with ttf://)', async () => {
     let { output: olStyle } = await styleParser.writeStyle(point_fontglyph);

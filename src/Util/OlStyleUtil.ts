@@ -252,7 +252,11 @@ class OlStyleUtil {
    * @returns the base64 encoded SVG string
    */
   public static getBase64EncodedSvg(svgString: string) {
-    return 'data:image/svg+xml;base64,' + Buffer.from(svgString).toString('base64');
+    const isRunningInNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
+
+    return 'data:image/svg+xml;base64,' + isRunningInNode
+      ? Buffer.from(svgString).toString('base64') // Node.js
+      : btoa(svgString); // Browser
   }
 
   /**
@@ -262,6 +266,11 @@ class OlStyleUtil {
    * @returns The decoded SVG string in UTF-8 format.
    */
   public static getBase64DecodedSvg(svgBase64String: string) {
+    const isRunningInNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
+
+    return isRunningInNode
+      ? Buffer.from(svgBase64String.replace('data:image/svg+xml;base64,', ''), 'base64').toString('utf-8') // Node.js
+      : atob(svgBase64String.replace('data:image/svg+xml;base64,', '')); // Browser
     return Buffer.from(svgBase64String.replace('data:image/svg+xml;base64,', ''), 'base64').toString('utf-8');
   }
 

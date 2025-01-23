@@ -8,9 +8,8 @@ const pointSimpleTimes: Style = {
       symbolizers: [{
         kind: 'Mark',
         wellKnownName: 'shape://times',
-        color: '#FF0000',
-        radius: 6,
-        rotate: 0
+        strokeColor: '#FF0000',
+        radius: 6
       }]
     }
   ]

@@ -1,9 +1,11 @@
 import OlStyle from 'ol/style/Style';
 import OlStyleIcon  from 'ol/style/Icon';
 import OlStyleUtil from '../../src/Util/OlStyleUtil';
-import { getShapeSvg } from '../../src/Util/svgs';
+import { getShapeSvg, removeDuplicateShapes } from '../../src/Util/svgs';
 
-let svg = getShapeSvg('shape://plus', {
+const shape = removeDuplicateShapes('shape://plus');
+
+const svg = getShapeSvg(shape, {
   stroke: '#FF0000',
   dimensions: 12
 });

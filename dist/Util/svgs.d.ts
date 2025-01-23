@@ -2,8 +2,10 @@ export interface SvgOptions {
     id?: string;
     dimensions: number;
     fill?: string;
+    fillOpacity?: number;
     stroke?: string;
-    strokeWidth?: string;
+    strokeWidth?: number;
+    strokeOpacity?: number;
 }
 /**
  * Returns an SVG string for a given shape type with the specified options.
@@ -24,12 +26,7 @@ export interface SvgOptions {
  *     - dimensions: The width and height of the resulting SVG. Default is '40'.
  * @returns {string} An SVG string for the given shape type with the specified options.
  */
-export declare const getShapeSvg: (shape?: string, { fill, stroke, strokeWidth, dimensions }?: {
-    fill?: string | undefined;
-    stroke?: string | undefined;
-    strokeWidth?: string | undefined;
-    dimensions?: number | undefined;
-}) => string;
+export declare const getShapeSvg: (shape?: string, options?: SvgOptions) => string;
 /**
  * Extracts the properties of an SVG string into an object.
  *
