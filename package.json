@@ -36,6 +36,7 @@
     "lint:typecheck:test": "npm run lint && npm run typecheck && npm run test"
   },
   "dependencies": {
+    "buffer": "^6.0.3",
     "css-font-parser": "^2.0.0",
     "geostyler-style": "github:pozi/geostyler-style#dev-with-build"
   },
