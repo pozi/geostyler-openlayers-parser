@@ -1202,9 +1202,8 @@ export class OlStyleParser {
         }
         else if (isMarkSymbolizer(graphicFill)) {
             graphicFillStyle = await this.getOlPointSymbolizerFromMarkSymbolizer(graphicFill);
-            const iconImgSrc = graphicFillStyle.getImage().getSrc();
-            const iconSvg = OlStyleUtil.getBase64DecodedSvg(iconImgSrc);
-            patternImage.src = iconImgSrc;
+            patternImage.src = graphicFillStyle.getImage().getSrc();
+            const iconSvg = OlStyleUtil.getBase64DecodedSvg(patternImage.src);
             const { dimensions } = getSvgProperties(iconSvg);
             if (dimensions) {
                 size = [dimensions, dimensions];
@@ -1213,8 +1212,6 @@ export class OlStyleParser {
         else {
             return null;
         }
-        // eslint-disable-next-line no-console
-        console.log('ZZZ - graphicFillStyle', graphicFillStyle);
         // We need to clone the style and image since we'll be changing the scale below (hack)
         const graphicFillStyleCloned = graphicFillStyle.clone();
         const imageCloned = graphicFillStyleCloned.getImage();
@@ -1237,11 +1234,7 @@ export class OlStyleParser {
             // vectorContext.setStyle(graphicFillStyle);
             const pointCoords = size.map(item => item / 2);
             const pointFeature = new OlFeature(new OlGeomPoint(pointCoords));
-            // eslint-disable-next-line no-console
-            console.log('ZZZ - pointCoords', pointCoords);
             vectorContext.drawFeature(pointFeature, graphicFillStyleCloned);
-            // eslint-disable-next-line no-console
-            console.log('ZZZ - graphicFillStyle2', graphicFillStyleCloned, vectorContext, scale);
         };
         return new Promise((resolve, reject) => {
             // Create a canvas for the repeating pattern
@@ -1253,9 +1246,8 @@ export class OlStyleParser {
             }
             // Ensure the image is loaded before drawing to the canvas
             patternImage.onload = () => {
-                // Set canvas size to match SVG dimensions (or your desired size)
-                canvas.width = 30;
-                canvas.height = 30;
+                canvas.width = size[0];
+                canvas.height = size[1];
                 // Draw the image (SVG) onto the canvas
                 context.drawImage(patternImage, 0, 0);
                 // Create a repeating pattern from the canvas
@@ -1268,7 +1260,7 @@ export class OlStyleParser {
                 resolve(pattern);
             };
             patternImage.onerror = (err) => {
-                reject(new Error('Failed to load SVG image: ' + err));
+                reject(new Error('Failed to load image: ' + err));
             };
         });
     }
