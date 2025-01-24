@@ -14,6 +14,7 @@ import { METERS_PER_UNIT } from 'ol/proj/Units';
 import OlStyleUtil from './Util/OlStyleUtil';
 import { getShapeSvg, getSvgProperties, isPointSvgDefined, removeDuplicateShapes } from './Util/svgs';
 import { toContext } from 'ol/render';
+import OlFeature from 'ol/Feature';
 /**
  * This parser can be used with the GeoStyler.
  * It implements the GeoStyler-Style Parser interface to work with OpenLayers styles.
@@ -596,11 +597,11 @@ export class OlStyleParser {
      * @return The Promise resolving with one of above mentioned style types.
      */
     writeStyle(geoStylerStyle) {
-        return new Promise((resolve) => {
+        return new Promise(async (resolve) => {
             const clonedStyle = structuredClone(geoStylerStyle);
             const unsupportedProperties = this.checkForUnsupportedProperties(clonedStyle);
             try {
-                const olStyle = this.getOlStyleTypeFromGeoStylerStyle(clonedStyle);
+                const olStyle = await this.getOlStyleTypeFromGeoStylerStyle(clonedStyle);
                 resolve({
                     output: olStyle,
                     unsupportedProperties,
@@ -662,7 +663,7 @@ export class OlStyleParser {
      *
      * @param geoStylerStyle A GeoStyler-Style Style
      */
-    getOlStyleTypeFromGeoStylerStyle(geoStylerStyle) {
+    async getOlStyleTypeFromGeoStylerStyle(geoStylerStyle) {
         const rules = geoStylerStyle.rules;
         const nrRules = rules.length;
         if (nrRules === 1) {
@@ -680,18 +681,18 @@ export class OlStyleParser {
             });
             if (!hasFilter && !hasScaleDenominator && !hasTextSymbolizer && !hasDynamicIconSymbolizer && !hasFunctions) {
                 if (nrSymbolizers === 1) {
-                    return this.geoStylerStyleToOlStyle(geoStylerStyle);
+                    return await this.geoStylerStyleToOlStyle(geoStylerStyle);
                 }
                 else {
-                    return this.geoStylerStyleToOlStyleArray(geoStylerStyle);
+                    return await this.geoStylerStyleToOlStyleArray(geoStylerStyle);
                 }
             }
             else {
-                return this.geoStylerStyleToOlParserStyleFct(geoStylerStyle);
+                return await this.geoStylerStyleToOlParserStyleFct(geoStylerStyle);
             }
         }
         else {
-            return this.geoStylerStyleToOlParserStyleFct(geoStylerStyle);
+            return await this.geoStylerStyleToOlParserStyleFct(geoStylerStyle);
         }
     }
     /**
@@ -700,10 +701,10 @@ export class OlStyleParser {
      * @param geoStylerStyle GeoStyler-Style Style
      * @return An OpenLayers Style Object
      */
-    geoStylerStyleToOlStyle(geoStylerStyle) {
+    async geoStylerStyleToOlStyle(geoStylerStyle) {
         const rule = geoStylerStyle.rules[0];
         const symbolizer = rule.symbolizers[0];
-        const olSymbolizer = this.getOlSymbolizerFromSymbolizer(symbolizer);
+        const olSymbolizer = await this.getOlSymbolizerFromSymbolizer(symbolizer);
         return olSymbolizer;
     }
     /**
@@ -712,11 +713,11 @@ export class OlStyleParser {
      * @param geoStylerStyle GeoStyler-Style Style
      * @return An array of OpenLayers Style Objects
      */
-    geoStylerStyleToOlStyleArray(geoStylerStyle) {
+    async geoStylerStyleToOlStyleArray(geoStylerStyle) {
         const rule = geoStylerStyle.rules[0];
         const olStyles = [];
-        rule.symbolizers.forEach((symbolizer) => {
-            const olSymbolizer = this.getOlSymbolizerFromSymbolizer(symbolizer);
+        rule.symbolizers.forEach(async (symbolizer) => {
+            const olSymbolizer = await this.getOlSymbolizerFromSymbolizer(symbolizer);
             olStyles.push(olSymbolizer);
         });
         return olStyles;
@@ -727,7 +728,7 @@ export class OlStyleParser {
      * @param geoStylerStyle A GeoStyler-Style Style.
      * @return An OlParserStyleFct
      */
-    geoStylerStyleToOlParserStyleFct(geoStylerStyle) {
+    async geoStylerStyleToOlParserStyleFct(geoStylerStyle) {
         const rules = structuredClone(geoStylerStyle.rules);
         const olStyle = (feature, resolution) => {
             const styles = [];
@@ -765,7 +766,7 @@ export class OlStyleParser {
                     }
                 }
                 if (isWithinScale && matchesFilter) {
-                    rule.symbolizers.forEach((symb) => {
+                    rule.symbolizers.forEach(async (symb) => {
                         if (symb.visibility === false) {
                             styles.push(null);
                         }
@@ -775,7 +776,7 @@ export class OlStyleParser {
                                 styles.push(null);
                             }
                         }
-                        const olSymbolizer = this.getOlSymbolizerFromSymbolizer(symb, feature);
+                        const olSymbolizer = await this.getOlSymbolizerFromSymbolizer(symb, feature);
                         // either an OlStyle or an ol.StyleFunction. OpenLayers only accepts an array
                         // of OlStyles, not ol.StyleFunctions.
                         // So we have to check it and in case of an ol.StyleFunction call that function
@@ -915,15 +916,15 @@ export class OlStyleParser {
      * @param symbolizer A GeoStyler-Style Symbolizer.
      * @return The OpenLayers Style object or a StyleFunction
      */
-    getOlSymbolizerFromSymbolizer(symbolizer, feature) {
+    async getOlSymbolizerFromSymbolizer(symbolizer, feature) {
         let olSymbolizer;
         symbolizer = structuredClone(symbolizer);
         switch (symbolizer.kind) {
             case 'Mark':
-                olSymbolizer = this.getOlPointSymbolizerFromMarkSymbolizer(symbolizer, feature);
+                olSymbolizer = await this.getOlPointSymbolizerFromMarkSymbolizer(symbolizer, feature);
                 break;
             case 'Icon':
-                olSymbolizer = this.getOlIconSymbolizerFromIconSymbolizer(symbolizer, feature);
+                olSymbolizer = await this.getOlIconSymbolizerFromIconSymbolizer(symbolizer, feature);
                 break;
             case 'Text':
                 olSymbolizer = this.getOlTextSymbolizerFromTextSymbolizer(symbolizer, feature);
@@ -932,7 +933,7 @@ export class OlStyleParser {
                 olSymbolizer = this.getOlLineSymbolizerFromLineSymbolizer(symbolizer, feature);
                 break;
             case 'Fill':
-                olSymbolizer = this.getOlPolygonSymbolizerFromFillSymbolizer(symbolizer, feature);
+                olSymbolizer = await this.getOlPolygonSymbolizerFromFillSymbolizer(symbolizer, feature);
                 break;
             default:
                 // Return the OL default style since the TS type binding does not allow
@@ -963,7 +964,7 @@ export class OlStyleParser {
      * @param markSymbolizer A GeoStyler-Style MarkSymbolizer.
      * @return The OL Style object
      */
-    getOlPointSymbolizerFromMarkSymbolizer(markSymbolizer, feature) {
+    async getOlPointSymbolizerFromMarkSymbolizer(markSymbolizer, feature) {
         for (const key of Object.keys(markSymbolizer)) {
             if (isGeoStylerFunction(markSymbolizer[key])) {
                 markSymbolizer[key] = OlStyleUtil.evaluateFunction(markSymbolizer[key], feature);
@@ -990,6 +991,7 @@ export class OlStyleParser {
                 ...(strokeOpacity && { strokeOpacity })
             };
             const svg = getShapeSvg(shape, svgOpts);
+            // olStyle = OlStyleUtil.createIconStyleFromSvg(svg);
             olStyle = new this.OlStyleConstructor({
                 image: new this.OlStyleIconConstructor({
                     src: OlStyleUtil.getBase64EncodedSvg(svg),
@@ -1038,7 +1040,7 @@ export class OlStyleParser {
      * @param symbolizer  A GeoStyler-Style IconSymbolizer.
      * @return The OL Style object
      */
-    getOlIconSymbolizerFromIconSymbolizer(symbolizer, feat) {
+    async getOlIconSymbolizerFromIconSymbolizer(symbolizer, feat) {
         for (const key of Object.keys(symbolizer)) {
             if (isGeoStylerFunction(symbolizer[key])) {
                 symbolizer[key] = OlStyleUtil.evaluateFunction(symbolizer[key], feat);
@@ -1134,7 +1136,7 @@ export class OlStyleParser {
      * @param symbolizer A GeoStyler-Style FillSymbolizer.
      * @return The OL Style object
      */
-    getOlPolygonSymbolizerFromFillSymbolizer(symbolizer, feat) {
+    async getOlPolygonSymbolizerFromFillSymbolizer(symbolizer, feat) {
         for (const key of Object.keys(symbolizer)) {
             if (isGeoStylerFunction(symbolizer[key])) {
                 symbolizer[key] = OlStyleUtil.evaluateFunction(symbolizer[key], feat);
@@ -1168,7 +1170,7 @@ export class OlStyleParser {
                 fill = new this.OlStyleFillConstructor({});
             }
             if (pattern) {
-                fill.setColor(pattern);
+                fill.setColor(await pattern);
             }
             olStyle.setFill(fill);
         }
@@ -1184,23 +1186,35 @@ export class OlStyleParser {
      * @param graphicFill The Symbolizer that holds the pattern config.
      * @returns The created CanvasPattern, or null.
      */
-    getOlPatternFromGraphicFill(graphicFill) {
+    async getOlPatternFromGraphicFill(graphicFill) {
         let graphicFillStyle;
+        let size = [16, 16];
+        const patternImage = new Image();
         if (isIconSymbolizer(graphicFill)) {
-            graphicFillStyle = this.getOlIconSymbolizerFromIconSymbolizer(graphicFill);
+            graphicFillStyle = await this.getOlIconSymbolizerFromIconSymbolizer(graphicFill);
             const graphicFillImage = graphicFillStyle?.getImage();
-            graphicFillImage?.load(); // Needed for Icon type images with a remote src
+            await graphicFillImage?.load(); // Needed for Icon type images with a remote src
             // We can only work with the image once it's loaded
             if (graphicFillImage?.getImageState() !== OlImageState.LOADED) {
                 return null;
             }
+            size = graphicFillStyle.getSize();
         }
         else if (isMarkSymbolizer(graphicFill)) {
-            // graphicFillStyle = this.getOlPointSymbolizerFromMarkSymbolizer(graphicFill);
+            graphicFillStyle = await this.getOlPointSymbolizerFromMarkSymbolizer(graphicFill);
+            const iconImgSrc = graphicFillStyle.getImage().getSrc();
+            const iconSvg = OlStyleUtil.getBase64DecodedSvg(iconImgSrc);
+            patternImage.src = iconImgSrc;
+            const { dimensions } = getSvgProperties(iconSvg);
+            if (dimensions) {
+                size = [dimensions, dimensions];
+            }
         }
         else {
             return null;
         }
+        // eslint-disable-next-line no-console
+        console.log('ZZZ - graphicFillStyle', graphicFillStyle);
         // We need to clone the style and image since we'll be changing the scale below (hack)
         const graphicFillStyleCloned = graphicFillStyle.clone();
         const imageCloned = graphicFillStyleCloned.getImage();
@@ -1213,32 +1227,50 @@ export class OlStyleParser {
         const scale = imageCloned.getScale() || 1;
         const pixelRatio = scale;
         imageCloned.setScale(1);
-        // let size: [number, number] = graphicFillStyle.getSize();
-        // if (!size) {
-        //   const iconSvg = OlStyleUtil.getBase64DecodedSvg(imageCloned.getSrc() as string);
-        //   const { dimensions } = getSvgProperties(iconSvg);
-        //   if (dimensions) {
-        //     size = [dimensions, dimensions];
-        //   }
-        // }
-        const size = [20, 20];
         // Create the context where we'll be drawing the style on
         const vectorContext = toContext(tmpContext, {
             pixelRatio,
             size
         });
-        const tmpStyle = new this.OlStyleConstructor({
-            stroke: new this.OlStyleStrokeConstructor({
-                color: '#000000',
-                width: 1
-            })
+        imageCloned.onload = () => {
+            // Draw the graphic
+            // vectorContext.setStyle(graphicFillStyle);
+            const pointCoords = size.map(item => item / 2);
+            const pointFeature = new OlFeature(new OlGeomPoint(pointCoords));
+            // eslint-disable-next-line no-console
+            console.log('ZZZ - pointCoords', pointCoords);
+            vectorContext.drawFeature(pointFeature, graphicFillStyleCloned);
+            // eslint-disable-next-line no-console
+            console.log('ZZZ - graphicFillStyle2', graphicFillStyleCloned, vectorContext, scale);
+        };
+        return new Promise((resolve, reject) => {
+            // Create a canvas for the repeating pattern
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            if (!context) {
+                reject(new Error('Failed to get canvas context'));
+                return;
+            }
+            // Ensure the image is loaded before drawing to the canvas
+            patternImage.onload = () => {
+                // Set canvas size to match SVG dimensions (or your desired size)
+                canvas.width = 30;
+                canvas.height = 30;
+                // Draw the image (SVG) onto the canvas
+                context.drawImage(patternImage, 0, 0);
+                // Create a repeating pattern from the canvas
+                const pattern = context.createPattern(canvas, 'repeat');
+                if (!pattern) {
+                    reject(new Error('Failed to create pattern'));
+                    return;
+                }
+                // Resolve the pattern so it can be used elsewhere
+                resolve(pattern);
+            };
+            patternImage.onerror = (err) => {
+                reject(new Error('Failed to load SVG image: ' + err));
+            };
         });
-        // Draw the graphic
-        vectorContext.setStyle(tmpStyle);
-        const pointCoords = size.map(item => item / 2);
-        vectorContext.drawGeometry(new OlGeomPoint(pointCoords));
-        // Create the actual pattern and return style
-        return tmpContext.createPattern(tmpCanvas, 'repeat');
     }
     /**
      * Get the OL StyleFunction object from an GeoStyler-Style TextSymbolizer.

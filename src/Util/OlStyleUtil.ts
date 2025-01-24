@@ -24,6 +24,7 @@ import {
 } from 'geostyler-style/dist/typeguards';
 
 import OlFeature from 'ol/Feature';
+import { Style as OlStyle, Icon as OlStyleIcon } from 'ol/style';
 import { colors } from './colors';
 
 import { Buffer } from 'buffer';
@@ -247,6 +248,29 @@ class OlStyleUtil {
     return parts ? parseInt(parts[1], 10) : 0;
   }
 
+  public static createIconStyleFromSvg(svgString: string): OlStyle {
+    const blob = new Blob([svgString], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+
+    const iconStyle = new OlStyle({
+      image: new OlStyleIcon({
+        src: url,
+        crossOrigin: 'anonymous',
+        scale: 1,
+      }),
+    });
+
+    const image = new Image();
+
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+    };
+
+    image.src = url;
+
+    return iconStyle;
+  }
+
   /**
    * Encodes the given SVG string using base64 encoding.
    *
@@ -264,7 +288,6 @@ class OlStyleUtil {
    * @returns The decoded SVG string in UTF-8 format.
    */
   public static getBase64DecodedSvg(svgBase64String: string) {
-
     return Buffer.from(svgBase64String.replace('data:image/svg+xml;base64,', ''), 'base64').toString('utf-8');
   }
 

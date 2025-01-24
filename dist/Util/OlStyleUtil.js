@@ -1,4 +1,5 @@
 import { isGeoStylerBooleanFunction, isGeoStylerFunction, isGeoStylerNumberFunction, isGeoStylerStringFunction, isGeoStylerUnknownFunction } from 'geostyler-style/dist/typeguards';
+import { Style as OlStyle, Icon as OlStyleIcon } from 'ol/style';
 import { colors } from './colors';
 import { Buffer } from 'buffer';
 const WELLKNOWNNAME_TTF_REGEXP = /^ttf:\/\/(.+)#(.+)$/;
@@ -198,6 +199,23 @@ class OlStyleUtil {
     static getSizeFromOlFont(olFont) {
         const parts = olFont.match(/(?:(\d+)px)/);
         return parts ? parseInt(parts[1], 10) : 0;
+    }
+    static createIconStyleFromSvg(svgString) {
+        const blob = new Blob([svgString], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+        const iconStyle = new OlStyle({
+            image: new OlStyleIcon({
+                src: url,
+                crossOrigin: 'anonymous',
+                scale: 1,
+            }),
+        });
+        const image = new Image();
+        image.onload = () => {
+            URL.revokeObjectURL(url);
+        };
+        image.src = url;
+        return iconStyle;
     }
     /**
      * Encodes the given SVG string using base64 encoding.

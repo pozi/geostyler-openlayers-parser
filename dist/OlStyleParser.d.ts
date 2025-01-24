@@ -140,28 +140,28 @@ export declare class OlStyleParser implements StyleParser<OlStyleLike> {
      *
      * @param geoStylerStyle A GeoStyler-Style Style
      */
-    getOlStyleTypeFromGeoStylerStyle(geoStylerStyle: Style): OlStyle | OlStyle[] | OlParserStyleFct;
+    getOlStyleTypeFromGeoStylerStyle(geoStylerStyle: Style): Promise<OlStyle | OlParserStyleFct | OlStyle[]>;
     /**
      * Parses the first symbolizer of the first rule of a GeoStyler-Style Style.
      *
      * @param geoStylerStyle GeoStyler-Style Style
      * @return An OpenLayers Style Object
      */
-    geoStylerStyleToOlStyle(geoStylerStyle: Style): OlStyle;
+    geoStylerStyleToOlStyle(geoStylerStyle: Style): Promise<OlStyle>;
     /**
      * Parses all symbolizers of the first rule of a GeoStyler-Style Style.
      *
      * @param geoStylerStyle GeoStyler-Style Style
      * @return An array of OpenLayers Style Objects
      */
-    geoStylerStyleToOlStyleArray(geoStylerStyle: Style): OlStyle[];
+    geoStylerStyleToOlStyleArray(geoStylerStyle: Style): Promise<OlStyle[]>;
     /**
      * Get the OpenLayers Style object from an GeoStyler-Style Style
      *
      * @param geoStylerStyle A GeoStyler-Style Style.
      * @return An OlParserStyleFct
      */
-    geoStylerStyleToOlParserStyleFct(geoStylerStyle: Style): OlParserStyleFct;
+    geoStylerStyleToOlParserStyleFct(geoStylerStyle: Style): Promise<OlParserStyleFct>;
     /**
      * Checks if a feature matches given filter expression(s)
      * @param feature ol.Feature
@@ -176,21 +176,21 @@ export declare class OlStyleParser implements StyleParser<OlStyleLike> {
      * @param symbolizer A GeoStyler-Style Symbolizer.
      * @return The OpenLayers Style object or a StyleFunction
      */
-    getOlSymbolizerFromSymbolizer(symbolizer: Symbolizer, feature?: OlFeature): OlStyle;
+    getOlSymbolizerFromSymbolizer(symbolizer: Symbolizer, feature?: OlFeature): Promise<OlStyle>;
     /**
      * Get the OL Style object  from an GeoStyler-Style MarkSymbolizer.
      *
      * @param markSymbolizer A GeoStyler-Style MarkSymbolizer.
      * @return The OL Style object
      */
-    getOlPointSymbolizerFromMarkSymbolizer(markSymbolizer: MarkSymbolizer, feature?: OlFeature): OlStyle;
+    getOlPointSymbolizerFromMarkSymbolizer(markSymbolizer: MarkSymbolizer, feature?: OlFeature): Promise<OlStyle>;
     /**
      * Get the OL Style object  from an GeoStyler-Style IconSymbolizer.
      *
      * @param symbolizer  A GeoStyler-Style IconSymbolizer.
      * @return The OL Style object
      */
-    getOlIconSymbolizerFromIconSymbolizer(symbolizer: IconSymbolizer, feat?: OlFeature): OlStyle | OlStyleIcon | OlStyleFunction;
+    getOlIconSymbolizerFromIconSymbolizer(symbolizer: IconSymbolizer, feat?: OlFeature): Promise<OlStyle | OlStyleIcon | OlStyleFunction>;
     /**
      * Get the OL Style object from an GeoStyler-Style LineSymbolizer.
      *
@@ -204,7 +204,7 @@ export declare class OlStyleParser implements StyleParser<OlStyleLike> {
      * @param symbolizer A GeoStyler-Style FillSymbolizer.
      * @return The OL Style object
      */
-    getOlPolygonSymbolizerFromFillSymbolizer(symbolizer: FillSymbolizer, feat?: OlFeature): OlStyle | OlStyleFill;
+    getOlPolygonSymbolizerFromFillSymbolizer(symbolizer: FillSymbolizer, feat?: OlFeature): Promise<OlStyle | OlStyleFill>;
     /**
      * Get the pattern for a graphicFill.
      *
@@ -215,7 +215,7 @@ export declare class OlStyleParser implements StyleParser<OlStyleLike> {
      * @param graphicFill The Symbolizer that holds the pattern config.
      * @returns The created CanvasPattern, or null.
      */
-    getOlPatternFromGraphicFill(graphicFill: PointSymbolizer): CanvasPattern | null;
+    getOlPatternFromGraphicFill(graphicFill: PointSymbolizer): Promise<CanvasPattern | null>;
     /**
      * Get the OL StyleFunction object from an GeoStyler-Style TextSymbolizer.
      *

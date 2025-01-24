@@ -1,6 +1,7 @@
 import { MarkSymbolizer, PropertyType, Style, TextSymbolizer } from 'geostyler-style/dist/style';
 import { GeoStylerBooleanFunction, GeoStylerFunction, GeoStylerNumberFunction, GeoStylerStringFunction, GeoStylerUnknownFunction } from 'geostyler-style/dist/functions';
 import OlFeature from 'ol/Feature';
+import { Style as OlStyle } from 'ol/style';
 export declare const DUMMY_MARK_SYMBOLIZER_FONT = "geostyler-mark-symbolizer";
 /**
  * Offers some utility functions to work with OpenLayers Styles.
@@ -93,6 +94,7 @@ declare class OlStyleUtil {
      * @param olFont the `font` property of an OpenLayers text style
      */
     static getSizeFromOlFont(olFont: string): number;
+    static createIconStyleFromSvg(svgString: string): OlStyle;
     /**
      * Encodes the given SVG string using base64 encoding.
      *
