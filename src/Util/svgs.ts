@@ -125,7 +125,7 @@ export const getShapeSvg = (
   const svgHeader = '<svg xmlns="http://www.w3.org/2000/svg" ' +
     'width="' + dimensions + '" ' +
     'height="' + dimensions + '" ' +
-    'viewBox = "-12 -12 24 24">';
+    'viewBox="-12 -12 24 24">';
   const svgFooter = '</svg>';
 
   let svgBody = pointSvgs[shape] + ' ';
@@ -158,7 +158,12 @@ export const getShapeSvg = (
     svgStyle += 'stroke-opacity:' + strokeOpacity + '; ';
   }
 
-  svgBody += 'style="' + svgStyle.trim() + '" />';
+  svgStyle = svgStyle.trim();
+  // if (svgStyle.endsWith(';')) {
+  //   svgStyle = svgStyle.slice(0, -1); // Remove the semicolon
+  // }
+
+  svgBody += 'style="' + svgStyle + '" />';
 
   return svgHeader + svgBody + svgFooter;
 };

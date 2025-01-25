@@ -104,7 +104,7 @@ import {
 } from 'geostyler-style/dist/style';
 
 import OlStyleUtil from './Util/OlStyleUtil';
-import { getSvgProperties, removeDuplicateShapes } from './Util/svgs';
+import { getShapeSvg, getSvgProperties, removeDuplicateShapes } from './Util/svgs';
 
 // reverse calculation of resolution for scale (from ol-util MapUtil)
 function getResolutionForScale (scale, units) {
@@ -949,6 +949,8 @@ describe('OlStyleParser implements StyleParser', () => {
 
     const testFeature = new OlFeature();
     const styles = olStyle(testFeature, 1);
+    // eslint-disable-next-line no-console
+    console.log('ZZZ - targetStyle1', olStyle, styles);
     expect(styles).toHaveLength(2);
 
     const expecSymb1 = multi_twoRulesSimplepoint.rules[0].symbolizers[0] as MarkSymbolizer;

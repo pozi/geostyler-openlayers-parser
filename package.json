@@ -38,7 +38,8 @@
   "dependencies": {
     "buffer": "^6.0.3",
     "css-font-parser": "^2.0.0",
-    "geostyler-style": "file:../geostyler-style"
+    "geostyler-style": "github:pozi/geostyler-style#dev-with-build",
+    "js-base64": "^3.7.7"
   },
   "peerDependencies": {
     "ol": ">=7.4"

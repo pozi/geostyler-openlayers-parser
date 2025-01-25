@@ -27,7 +27,7 @@ import OlFeature from 'ol/Feature';
 import { Style as OlStyle, Icon as OlStyleIcon } from 'ol/style';
 import { colors } from './colors';
 
-import { Buffer } from 'buffer';
+import { Base64 } from 'js-base64';
 
 const WELLKNOWNNAME_TTF_REGEXP = /^ttf:\/\/(.+)#(.+)$/;
 export const DUMMY_MARK_SYMBOLIZER_FONT = 'geostyler-mark-symbolizer';
@@ -278,7 +278,7 @@ class OlStyleUtil {
    * @returns the base64 encoded SVG string
    */
   public static getBase64EncodedSvg(svgString: string) {
-    return 'data:image/svg+xml;base64,' + Buffer.from(svgString).toString('base64');
+    return `data:image/svg+xml;base64,${Base64.encode(svgString)}`;
   }
 
   /**
@@ -288,7 +288,8 @@ class OlStyleUtil {
    * @returns The decoded SVG string in UTF-8 format.
    */
   public static getBase64DecodedSvg(svgBase64String: string) {
-    return Buffer.from(svgBase64String.replace('data:image/svg+xml;base64,', ''), 'base64').toString('utf-8');
+    return Base64.decode(svgBase64String.replace('data:image/svg+xml;base64,', ''));
+    // return Buffer.from(svgBase64String.replace('data:image/svg+xml;base64,', ''), 'base64').toString('utf-8');
   }
 
   /**

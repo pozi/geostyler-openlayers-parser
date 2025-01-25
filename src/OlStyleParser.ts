@@ -30,8 +30,6 @@ import {
   isSprite
 } from 'geostyler-style/dist/typeguards';
 
-import OlImageState from 'ol/ImageState';
-
 import OlGeomPoint from 'ol/geom/Point';
 
 import OlStyle, { StyleFunction as OlStyleFunction, StyleLike as OlStyleLike} from 'ol/style/Style';
@@ -329,22 +327,28 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
       try {
         const svgString = OlStyleUtil.getBase64DecodedSvg(olIconStyle.getSrc() as string);
         const { id, dimensions, fill, stroke, strokeWidth } = getSvgProperties(svgString);
-        const strokeOpacity = stroke
-          ? OlStyleUtil.getOpacity(stroke) !== 1
-            ? OlStyleUtil.getOpacity(stroke)
-            : undefined
-          : undefined;
+        let { fillOpacity, strokeOpacity } = getSvgProperties(svgString);
+
+        fillOpacity = fillOpacity
+          ? fillOpacity : OlStyleUtil.getOpacity(String(fill)) !== 1
+            ? OlStyleUtil.getOpacity(String(fill))
+            : undefined;
+        strokeOpacity = strokeOpacity
+          ? strokeOpacity : OlStyleUtil.getOpacity(String(stroke)) !== 1
+            ? OlStyleUtil.getOpacity(String(stroke))
+            : undefined;
 
         pointSymbolizer = {
           kind: 'Mark',
           wellKnownName: id,
           ...fill && { color: fill },
-          ...(opacity !== undefined && opacity !== 1 && { opacity }),
+          ...fillOpacity && { fillOpacity },
           ...stroke && { strokeColor: stroke.substring(0, 7) },
-          ...strokeWidth !== undefined && { strokeWidth },
-          ...strokeOpacity !== undefined && { strokeOpacity },
+          ...strokeWidth && { strokeWidth },
+          ...strokeOpacity && { strokeOpacity },
           ...(dimensions / 2 !== 0 && { radius: dimensions / 2 }),
-          ...(rotation !== undefined && rotation !== 0 && { rotate: rotation }),
+          ...(opacity && opacity !== 1 && { opacity }),
+          ...(rotation && rotation !== 0 && { rotate: rotation }),
           ...((displacement[0] || displacement[1]) && { offset: displacement }),
         } as MarkSymbolizer;
       } catch {
@@ -354,11 +358,11 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
         const iconSymbolizer: IconSymbolizer = {
           kind: 'Icon',
           image,
-          opacity: opacity < 1 ? opacity : undefined,
           size,
+          ...(opacity && opacity !== 1 && { opacity }),
           // Rotation in openlayers is radians while we use degree
-          rotate: rotation !== 0 ? rotation : undefined,
-          offset: displacement[0] || displacement[1] ? displacement : undefined
+          ...(rotation && rotation !== 0 && { rotate: rotation }),
+          ...((displacement[0] || displacement[1]) && { offset: displacement }),
         };
         pointSymbolizer = iconSymbolizer;
       }
@@ -860,10 +864,14 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
           });
         }
       });
+      // eslint-disable-next-line no-console
+      console.log('www - targetStyle1', styles);
       return styles;
     };
     const olStyleFct: OlParserStyleFct = olStyle as OlParserStyleFct;
     olStyleFct.__geoStylerStyle = geoStylerStyle;
+    // eslint-disable-next-line no-console
+    console.log('www - targetStyle1', olStyleFct);
     return olStyleFct;
   }
 
@@ -1283,80 +1291,71 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
    * @returns The created CanvasPattern, or null.
    */
   async getOlPatternFromGraphicFill(graphicFill: PointSymbolizer): Promise<CanvasPattern | null> {
-    let graphicFillStyle: any;
-    let size: [number, number] = [16, 16];
-    const patternImage = new Image();
-    if (isIconSymbolizer(graphicFill)) {
-      graphicFillStyle = await this.getOlIconSymbolizerFromIconSymbolizer(graphicFill);
-      const graphicFillImage = graphicFillStyle?.getImage();
-      await graphicFillImage?.load(); // Needed for Icon type images with a remote src
-      // We can only work with the image once it's loaded
-      if (graphicFillImage?.getImageState() !== OlImageState.LOADED) {
-        return null;
-      }
-      size = graphicFillStyle.getSize();
-    } else if (isMarkSymbolizer(graphicFill)) {
-      graphicFillStyle = await this.getOlPointSymbolizerFromMarkSymbolizer(graphicFill);
-      patternImage.src = graphicFillStyle.getImage().getSrc();
-      const iconSvg = OlStyleUtil.getBase64DecodedSvg(patternImage.src);
-      const { dimensions } = getSvgProperties(iconSvg);
-      if (dimensions) {
-        size = [dimensions, dimensions];
-      }
-    } else {
-      return null;
-    }
-
-    // We need to clone the style and image since we'll be changing the scale below (hack)
-    const graphicFillStyleCloned = graphicFillStyle.clone();
-    const imageCloned = graphicFillStyleCloned.getImage();
-
-    // Temporary canvas.
-    // TODO: Can/should we reuse an pre-existing one for efficiency?
-    const tmpCanvas: HTMLCanvasElement = document.createElement('canvas');
-    const tmpContext = tmpCanvas.getContext('2d') as CanvasRenderingContext2D;
-
-    // Hack to make scaling work for Icons.
-    // TODO: find a better way than this.
-    const scale = imageCloned.getScale() || 1;
-    const pixelRatio = scale;
-    imageCloned.setScale(1);
-
-    // Create the context where we'll be drawing the style on
-    const vectorContext = toContext(tmpContext, {
-      pixelRatio,
-      size
-    });
-
-    imageCloned.onload = () => {
-      // Draw the graphic
-      // vectorContext.setStyle(graphicFillStyle);
-      const pointCoords = size.map(item  => item / 2);
-      const pointFeature = new OlFeature(new OlGeomPoint(pointCoords));
-      vectorContext.drawFeature(pointFeature, graphicFillStyleCloned);
-    };
-
-    return new Promise((resolve, reject) => {
-
-      // Create a canvas for the repeating pattern
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-
-      if (!context) {
-        reject(new Error('Failed to get canvas context'));
+    return new Promise(async (resolve, reject) => {
+      let graphicFillStyle: any;
+      let size: [number, number] = [16, 16];
+      if (isIconSymbolizer(graphicFill)) {
+        graphicFillStyle = await this.getOlIconSymbolizerFromIconSymbolizer(graphicFill);
+        size = graphicFillStyle.getSize();
+      } else if (isMarkSymbolizer(graphicFill)) {
+        graphicFillStyle = await this.getOlPointSymbolizerFromMarkSymbolizer(graphicFill);
+        const iconSvg = OlStyleUtil.getBase64DecodedSvg(graphicFillStyle.getImage().getSrc());
+        const { dimensions } = getSvgProperties(iconSvg);
+        if (dimensions) {
+          size = [dimensions, dimensions];
+        }
+      } else {
+        reject(new Error('Unrecognised graphicFill type'));
         return;
       }
 
-      // Ensure the image is loaded before drawing to the canvas
-      patternImage.onload = () => {
-        canvas.width = size[0];
-        canvas.height = size[1];
+      const iconImage = graphicFillStyle.getImage();
 
-        // Draw the image (SVG) onto the canvas
-        context.drawImage(patternImage, 0, 0);
+      // Temporary canvas.
+      // TODO: Can/should we reuse an pre-existing one for efficiency?
+      const tmpCanvas: HTMLCanvasElement = document.createElement('canvas');
+      tmpCanvas.width = size[0];
+      tmpCanvas.height = size[1];
+      const tmpContext = tmpCanvas.getContext('2d') as CanvasRenderingContext2D;
+
+      // Create the context where we'll be drawing the style on
+      const vectorContext = toContext(tmpContext, {
+        size,
+        pixelRatio: 1
+      });
+
+      const pointCoords = size.map(item  => item / 2);
+      const pointFeature = new OlFeature(new OlGeomPoint(pointCoords));
+
+      const patternImage = new Image(
+        size[0],
+        size[1]
+      );
+      patternImage.crossOrigin = 'anonymous';
+      patternImage.src = iconImage.getSrc();
+
+      const iconStyle = new OlStyleIcon({
+        crossOrigin: 'anonymous',
+        img: patternImage, // URL to the icon image
+        scale: 1, // Scale of the icon (1 = original size)
+        size, // Size of the icon
+        rotation: iconImage.getRotation()
+      });
+
+      const pointStyle = new OlStyle({
+        image: iconStyle
+      });
+
+      patternImage.onload = () => {
+        iconStyle.load();
+
+        // eslint-disable-next-line no-console
+        console.log('Do we get here?', graphicFillStyle, iconStyle);
+
+        vectorContext.drawFeature(pointFeature, pointStyle);
 
         // Create a repeating pattern from the canvas
-        const pattern = context.createPattern(canvas, 'repeat');
+        const pattern = tmpContext.createPattern(tmpCanvas, 'repeat');
 
         if (!pattern) {
           reject(new Error('Failed to create pattern'));
@@ -1365,10 +1364,7 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
 
         // Resolve the pattern so it can be used elsewhere
         resolve(pattern);
-      };
-
-      patternImage.onerror = (err) => {
-        reject(new Error('Failed to load image: ' + err));
+        return;
       };
     });
   }

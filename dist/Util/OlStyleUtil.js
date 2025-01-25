@@ -1,7 +1,7 @@
 import { isGeoStylerBooleanFunction, isGeoStylerFunction, isGeoStylerNumberFunction, isGeoStylerStringFunction, isGeoStylerUnknownFunction } from 'geostyler-style/dist/typeguards';
 import { Style as OlStyle, Icon as OlStyleIcon } from 'ol/style';
 import { colors } from './colors';
-import { Buffer } from 'buffer';
+import { Base64 } from 'js-base64';
 const WELLKNOWNNAME_TTF_REGEXP = /^ttf:\/\/(.+)#(.+)$/;
 export const DUMMY_MARK_SYMBOLIZER_FONT = 'geostyler-mark-symbolizer';
 /**
@@ -224,7 +224,7 @@ class OlStyleUtil {
      * @returns the base64 encoded SVG string
      */
     static getBase64EncodedSvg(svgString) {
-        return 'data:image/svg+xml;base64,' + Buffer.from(svgString).toString('base64');
+        return `data:image/svg+xml;base64,${Base64.encode(svgString)}`;
     }
     /**
      * Decodes a base64 encoded SVG string.
@@ -233,7 +233,8 @@ class OlStyleUtil {
      * @returns The decoded SVG string in UTF-8 format.
      */
     static getBase64DecodedSvg(svgBase64String) {
-        return Buffer.from(svgBase64String.replace('data:image/svg+xml;base64,', ''), 'base64').toString('utf-8');
+        return Base64.decode(svgBase64String.replace('data:image/svg+xml;base64,', ''));
+        // return Buffer.from(svgBase64String.replace('data:image/svg+xml;base64,', ''), 'base64').toString('utf-8');
     }
     /**
      * Resolves the given template string with the given feature attributes, e.g.
