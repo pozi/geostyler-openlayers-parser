@@ -720,10 +720,11 @@ export class OlStyleParser {
     async geoStylerStyleToOlStyleArray(geoStylerStyle) {
         const rule = geoStylerStyle.rules[0];
         const olStyles = [];
-        rule.symbolizers.forEach(async (symbolizer) => {
+        for (const symbolizer of rule.symbolizers) {
             const olSymbolizer = await this.getOlSymbolizerFromSymbolizer(symbolizer);
             olStyles.push(olSymbolizer);
-        });
+        }
+        ;
         return olStyles;
     }
     /**
@@ -734,14 +735,14 @@ export class OlStyleParser {
      */
     async geoStylerStyleToOlParserStyleFct(geoStylerStyle) {
         const rules = structuredClone(geoStylerStyle.rules);
-        const olStyle = (feature, resolution) => {
+        const olStyle = async (feature, resolution) => {
             const styles = [];
             // calculate scale for resolution (from ol-util MapUtil)
             const dpi = 25.4 / 0.28;
             const mpu = METERS_PER_UNIT.m;
             const inchesPerMeter = 39.37;
             const scale = resolution * mpu * inchesPerMeter * dpi;
-            rules.forEach((rule) => {
+            for (const rule of rules) {
                 // handling scale denominator
                 let minScale = rule?.scaleDenominator?.min;
                 let maxScale = rule?.scaleDenominator?.max;
@@ -770,7 +771,7 @@ export class OlStyleParser {
                     }
                 }
                 if (isWithinScale && matchesFilter) {
-                    rule.symbolizers.forEach(async (symb) => {
+                    for (const symb of rule.symbolizers) {
                         if (symb.visibility === false) {
                             styles.push(null);
                         }
@@ -792,17 +793,15 @@ export class OlStyleParser {
                             const styleFromFct = olSymbolizer(feature, resolution);
                             styles.push(styleFromFct);
                         }
-                    });
+                    }
+                    ;
                 }
-            });
-            // eslint-disable-next-line no-console
-            console.log('www - targetStyle1', styles);
+            }
+            ;
             return styles;
         };
         const olStyleFct = olStyle;
         olStyleFct.__geoStylerStyle = geoStylerStyle;
-        // eslint-disable-next-line no-console
-        console.log('www - targetStyle1', olStyleFct);
         return olStyleFct;
     }
     /**
@@ -1230,7 +1229,9 @@ export class OlStyleParser {
             const pointFeature = new OlFeature(new OlGeomPoint(pointCoords));
             const patternImage = new Image(size[0], size[1]);
             patternImage.crossOrigin = 'anonymous';
+            // eslint-disable-next-line no-console
             patternImage.src = iconImage.getSrc();
+            console.log('image src', patternImage.src);
             const iconStyle = new OlStyleIcon({
                 crossOrigin: 'anonymous',
                 img: patternImage, // URL to the icon image
@@ -1241,10 +1242,12 @@ export class OlStyleParser {
             const pointStyle = new OlStyle({
                 image: iconStyle
             });
+            // eslint-disable-next-line no-console
+            console.time('Image Load Time');
             patternImage.onload = () => {
-                iconStyle.load();
                 // eslint-disable-next-line no-console
-                console.log('Do we get here?', graphicFillStyle, iconStyle);
+                console.timeEnd('Image Load Time');
+                iconStyle.load();
                 vectorContext.drawFeature(pointFeature, pointStyle);
                 // Create a repeating pattern from the canvas
                 const pattern = tmpContext.createPattern(tmpCanvas, 'repeat');
