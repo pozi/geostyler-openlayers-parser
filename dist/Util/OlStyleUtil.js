@@ -124,15 +124,7 @@ class OlStyleUtil {
      * @return true if the opacity is valid, false otherwise
      */
     static checkOpacity(opacity) {
-        if (!opacity) {
-            return false;
-        }
-        ;
-        const opacityNumber = Number(opacity);
-        if (!opacityNumber || opacityNumber < 0 || opacityNumber >= 1) {
-            return false;
-        }
-        return true;
+        return typeof opacity === 'number' && opacity >= 0 && opacity < 1;
     }
     /**
      * Returns an OL compliant font string.

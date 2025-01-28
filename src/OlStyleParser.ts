@@ -1067,6 +1067,8 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
       };
 
       const svg = getShapeSvg(shape, svgOpts);
+      // eslint-disable-next-line no-console
+      console.log('ZZZ - targetStyle1', svgOpts, fillOpacity, strokeOpacity, svg);
 
       olStyle = new this.OlStyleConstructor({
         image: new this.OlStyleIconConstructor({

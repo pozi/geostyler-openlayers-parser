@@ -994,6 +994,8 @@ export class OlStyleParser {
                 ...OlStyleUtil.checkOpacity(strokeOpacity) && { strokeOpacity }
             };
             const svg = getShapeSvg(shape, svgOpts);
+            // eslint-disable-next-line no-console
+            console.log('ZZZ - targetStyle1', svgOpts, fillOpacity, strokeOpacity, svg);
             olStyle = new this.OlStyleConstructor({
                 image: new this.OlStyleIconConstructor({
                     src: OlStyleUtil.getBase64EncodedSvg(svg),
