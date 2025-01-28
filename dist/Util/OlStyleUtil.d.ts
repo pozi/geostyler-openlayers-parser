@@ -1,7 +1,7 @@
 import { MarkSymbolizer, PropertyType, Style, TextSymbolizer } from 'geostyler-style/dist/style';
 import { GeoStylerBooleanFunction, GeoStylerFunction, GeoStylerNumberFunction, GeoStylerStringFunction, GeoStylerUnknownFunction } from 'geostyler-style/dist/functions';
 import OlFeature from 'ol/Feature';
-import { Style as OlStyle } from 'ol/style';
+export declare const LINE_WELLKNOWNNAMES: string[];
 export declare const DUMMY_MARK_SYMBOLIZER_FONT = "geostyler-mark-symbolizer";
 /**
  * Offers some utility functions to work with OpenLayers Styles.
@@ -44,6 +44,15 @@ declare class OlStyleUtil {
      * @return {string | undefined} The opacity value of the given RGBA color
      */
     static getOpacity(rgbaColor: string): number | undefined;
+    /**
+     * Checks if the given opacity value is valid.
+     * A valid opacity is a number between 0 and 1.
+     * Value 1 is ignored as this the default value.
+     * If the value is not valid, false is returned.
+     * @param opacity The opacity value to check
+     * @return true if the opacity is valid, false otherwise
+     */
+    static checkOpacity(opacity: number | string | undefined): boolean;
     /**
      * Returns an OL compliant font string.
      *
@@ -94,7 +103,6 @@ declare class OlStyleUtil {
      * @param olFont the `font` property of an OpenLayers text style
      */
     static getSizeFromOlFont(olFont: string): number;
-    static createIconStyleFromSvg(svgString: string): OlStyle;
     /**
      * Encodes the given SVG string using base64 encoding.
      *

@@ -1,3 +1,5 @@
+import OlStyleUtil, { LINE_WELLKNOWNNAMES } from './OlStyleUtil';
+
 export interface SvgOptions {
   id?: string;
   dimensions: number;
@@ -145,25 +147,23 @@ export const getShapeSvg = (
   if (fill) {
     svgStyle += 'fill:' + fill + '; ';
   }
-  if (fillOpacity) {
+  if (OlStyleUtil.checkOpacity(fillOpacity)) {
     svgStyle += 'fill-opacity:' + fillOpacity + '; ';
   }
   if (stroke) {
     svgStyle += 'stroke:' + stroke + '; ';
   }
-  if (strokeWidth !== undefined && strokeWidth !== 0) {
+  if (strokeWidth) {
     svgStyle += 'stroke-width:' + strokeWidth + '; ';
   }
-  if (strokeOpacity) {
+  if (OlStyleUtil.checkOpacity(strokeOpacity)) {
     svgStyle += 'stroke-opacity:' + strokeOpacity + '; ';
   }
+  if (LINE_WELLKNOWNNAMES.includes(shape)) {
+    svgStyle = svgStyle + 'stroke-linejoin: butt; ';
+  }
 
-  svgStyle = svgStyle.trim();
-  // if (svgStyle.endsWith(';')) {
-  //   svgStyle = svgStyle.slice(0, -1); // Remove the semicolon
-  // }
-
-  svgBody += 'style="' + svgStyle + '" />';
+  svgBody += 'style="' + svgStyle.trim() + '" />';
 
   return svgHeader + svgBody + svgFooter;
 };
@@ -222,11 +222,11 @@ export const getSvgProperties = (svgString: string): SvgOptions => {
     const svgOpts: SvgOptions = {
       id,
       dimensions: Number(width),
-      ...(styleMap.fill && { fill: styleMap.fill }),
-      ...(styleMap['fill-opacity'] && { fillOpacity: Number(styleMap['fill-opacity']) }),
-      ...(styleMap.stroke && { stroke: styleMap.stroke }),
-      ...(styleMap['stroke-width'] && { strokeWidth: Number(styleMap['stroke-width']) }),
-      ...(styleMap['stroke-opacity'] && { strokeOpacity: Number(styleMap['stroke-opacity']) })
+      ...styleMap.fill && { fill: styleMap.fill },
+      ...OlStyleUtil.checkOpacity(styleMap['fill-opacity']) && { fillOpacity: Number(styleMap['fill-opacity']) },
+      ...styleMap.stroke && { stroke: styleMap.stroke },
+      ...styleMap['stroke-width'] && { strokeWidth: Number(styleMap['stroke-width']) },
+      ...OlStyleUtil.checkOpacity(styleMap['stroke-opacity']) && { strokeOpacity: Number(styleMap['stroke-opacity']) }
     };
 
     return svgOpts;

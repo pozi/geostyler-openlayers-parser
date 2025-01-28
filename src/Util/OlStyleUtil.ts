@@ -24,12 +24,13 @@ import {
 } from 'geostyler-style/dist/typeguards';
 
 import OlFeature from 'ol/Feature';
-import { Style as OlStyle, Icon as OlStyleIcon } from 'ol/style';
 import { colors } from './colors';
 
 import { Base64 } from 'js-base64';
 
 const WELLKNOWNNAME_TTF_REGEXP = /^ttf:\/\/(.+)#(.+)$/;
+const SVG_URI_SCHEME = 'data:image/svg+xml;base64,';
+export const LINE_WELLKNOWNNAMES = ['horline', 'vertline', 'line'];
 export const DUMMY_MARK_SYMBOLIZER_FONT = 'geostyler-mark-symbolizer';
 
 /**
@@ -154,6 +155,24 @@ class OlStyleUtil {
   }
 
   /**
+   * Checks if the given opacity value is valid.
+   * A valid opacity is a number between 0 and 1.
+   * Value 1 is ignored as this the default value.
+   * If the value is not valid, false is returned.
+   * @param opacity The opacity value to check
+   * @return true if the opacity is valid, false otherwise
+   */
+  public static checkOpacity(opacity: number | string | undefined): boolean {
+    if (!opacity) { return false;};
+
+    const opacityNumber = Number(opacity);
+    if (!opacityNumber || opacityNumber < 0 || opacityNumber >= 1) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * Returns an OL compliant font string.
    *
    * @param symbolizer The TextSymbolizer to derive the font string from
@@ -248,29 +267,6 @@ class OlStyleUtil {
     return parts ? parseInt(parts[1], 10) : 0;
   }
 
-  public static createIconStyleFromSvg(svgString: string): OlStyle {
-    const blob = new Blob([svgString], { type: 'image/svg+xml' });
-    const url = URL.createObjectURL(blob);
-
-    const iconStyle = new OlStyle({
-      image: new OlStyleIcon({
-        src: url,
-        crossOrigin: 'anonymous',
-        scale: 1,
-      }),
-    });
-
-    const image = new Image();
-
-    image.onload = () => {
-      URL.revokeObjectURL(url);
-    };
-
-    image.src = url;
-
-    return iconStyle;
-  }
-
   /**
    * Encodes the given SVG string using base64 encoding.
    *
@@ -278,7 +274,7 @@ class OlStyleUtil {
    * @returns the base64 encoded SVG string
    */
   public static getBase64EncodedSvg(svgString: string) {
-    return `data:image/svg+xml;base64,${Base64.encode(svgString)}`;
+    return SVG_URI_SCHEME + Base64.encode(svgString);
   }
 
   /**
@@ -288,8 +284,7 @@ class OlStyleUtil {
    * @returns The decoded SVG string in UTF-8 format.
    */
   public static getBase64DecodedSvg(svgBase64String: string) {
-    return Base64.decode(svgBase64String.replace('data:image/svg+xml;base64,', ''));
-    // return Buffer.from(svgBase64String.replace('data:image/svg+xml;base64,', ''), 'base64').toString('utf-8');
+    return Base64.decode(svgBase64String.replace(SVG_URI_SCHEME, ''));
   }
 
   /**

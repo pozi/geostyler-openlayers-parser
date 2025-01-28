@@ -1,3 +1,4 @@
+import OlStyleUtil, { LINE_WELLKNOWNNAMES } from './OlStyleUtil';
 // Shape definitions, all are roughly scaled to 20x20 in coordinates between (-10,-10) to (10,10)
 const pointSvgs = {
     arrow: 'd="M 0,-10 L 5,-5 L 2.5,-5 L 2.5,10 L -2.5,10 L -2.5,-5 L -5,-5 L 0,-10 Z"',
@@ -123,23 +124,22 @@ export const getShapeSvg = (shape = 'circle', options = { dimensions: 40 }) => {
     if (fill) {
         svgStyle += 'fill:' + fill + '; ';
     }
-    if (fillOpacity) {
+    if (OlStyleUtil.checkOpacity(fillOpacity)) {
         svgStyle += 'fill-opacity:' + fillOpacity + '; ';
     }
     if (stroke) {
         svgStyle += 'stroke:' + stroke + '; ';
     }
-    if (strokeWidth !== undefined && strokeWidth !== 0) {
+    if (strokeWidth) {
         svgStyle += 'stroke-width:' + strokeWidth + '; ';
     }
-    if (strokeOpacity) {
+    if (OlStyleUtil.checkOpacity(strokeOpacity)) {
         svgStyle += 'stroke-opacity:' + strokeOpacity + '; ';
     }
-    svgStyle = svgStyle.trim();
-    // if (svgStyle.endsWith(';')) {
-    //   svgStyle = svgStyle.slice(0, -1); // Remove the semicolon
-    // }
-    svgBody += 'style="' + svgStyle + '" />';
+    if (LINE_WELLKNOWNNAMES.includes(shape)) {
+        svgStyle = svgStyle + 'stroke-linejoin: butt; ';
+    }
+    svgBody += 'style="' + svgStyle.trim() + '" />';
     return svgHeader + svgBody + svgFooter;
 };
 /**
@@ -188,11 +188,11 @@ export const getSvgProperties = (svgString) => {
         const svgOpts = {
             id,
             dimensions: Number(width),
-            ...(styleMap.fill && { fill: styleMap.fill }),
-            ...(styleMap['fill-opacity'] && { fillOpacity: Number(styleMap['fill-opacity']) }),
-            ...(styleMap.stroke && { stroke: styleMap.stroke }),
-            ...(styleMap['stroke-width'] && { strokeWidth: Number(styleMap['stroke-width']) }),
-            ...(styleMap['stroke-opacity'] && { strokeOpacity: Number(styleMap['stroke-opacity']) })
+            ...styleMap.fill && { fill: styleMap.fill },
+            ...OlStyleUtil.checkOpacity(styleMap['fill-opacity']) && { fillOpacity: Number(styleMap['fill-opacity']) },
+            ...styleMap.stroke && { stroke: styleMap.stroke },
+            ...styleMap['stroke-width'] && { strokeWidth: Number(styleMap['stroke-width']) },
+            ...OlStyleUtil.checkOpacity(styleMap['stroke-opacity']) && { strokeOpacity: Number(styleMap['stroke-opacity']) }
         };
         return svgOpts;
     }
