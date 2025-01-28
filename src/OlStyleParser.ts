@@ -331,7 +331,7 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
 
         fillOpacity = OlStyleUtil.checkOpacity(fillOpacity)
           ? fillOpacity : OlStyleUtil.getOpacity(String(fill));
-        strokeOpacity = !OlStyleUtil.checkOpacity(strokeOpacity)
+        strokeOpacity = OlStyleUtil.checkOpacity(strokeOpacity)
           ? strokeOpacity : OlStyleUtil.getOpacity(String(stroke));
 
         pointSymbolizer = {
@@ -1067,8 +1067,6 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
       };
 
       const svg = getShapeSvg(shape, svgOpts);
-      // eslint-disable-next-line no-console
-      console.log('ZZZ - targetStyle1', svgOpts, fillOpacity, strokeOpacity, svg);
 
       olStyle = new this.OlStyleConstructor({
         image: new this.OlStyleIconConstructor({
@@ -1078,7 +1076,7 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
           ...OlStyleUtil.checkOpacity(opacity) && { opacity },
           ...rotation && { rotation },
           scale: 1,
-        }),
+        })
       });
     } else if (OlStyleUtil.getIsFontGlyphBased(markSymbolizer)) {
       const strokeRgbaColor = (strokeColor && strokeOpacity ?
@@ -1302,6 +1300,7 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
           // TODO: Maybe use VendorOption's to control spacing?
           if (LINE_WELLKNOWNNAMES.includes(String(id))) {
             const iconRotation = graphicFillStyle.getImage().getRotation();
+            // Extend lines that aren't horizontal or vertical to be full size of the canvas
             const isNotVerticalOrHorizontal = (iconRotation / (Math.PI / 2)) % 1 !== 0;
             if (isNotVerticalOrHorizontal) {
               scaleFactor = Math.abs(Math.cos(iconRotation)) + Math.abs(Math.sin(iconRotation));

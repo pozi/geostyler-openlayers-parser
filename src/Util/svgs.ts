@@ -109,8 +109,10 @@ export const isPointSvgDefined = (shape: string) => shape in pointSvgs;
  * @param {SvgOptions} [options={}] The options to use for the shape.
  *     The following options are supported:
  *     - fill: The color to use for filling the shape. Default is '#fff'.
+ *     - fillOpacity: The opacity to use for filling the shape. Default is '1'.
  *     - stroke: The color to use for the shape's stroke. Default is '#000'.
  *     - strokeWidth: The width of the shape's stroke. Default is '1'.
+ *     - strokeOpacity: The opacity to use for the shape's stroke. Default is '1'.
  *     - dimensions: The width and height of the resulting SVG. Default is '40'.
  * @returns {string} An SVG string for the given shape type with the specified options.
  */
@@ -223,10 +225,10 @@ export const getSvgProperties = (svgString: string): SvgOptions => {
       id,
       dimensions: Number(width),
       ...styleMap.fill && { fill: styleMap.fill },
-      ...OlStyleUtil.checkOpacity(styleMap['fill-opacity']) && { fillOpacity: Number(styleMap['fill-opacity']) },
+      ...styleMap['fill-opacity'] && { fillOpacity: Number(styleMap['fill-opacity']) },
       ...styleMap.stroke && { stroke: styleMap.stroke },
       ...styleMap['stroke-width'] && { strokeWidth: Number(styleMap['stroke-width']) },
-      ...OlStyleUtil.checkOpacity(styleMap['stroke-opacity']) && { strokeOpacity: Number(styleMap['stroke-opacity']) }
+      ...styleMap['stroke-opacity'] && { strokeOpacity: Number(styleMap['stroke-opacity']) }
     };
 
     return svgOpts;

@@ -17,6 +17,7 @@ import point_icon_sprite from '../data/styles/point_icon_sprite';
 import point_dynamic_icon from '../data/styles/point_dynamic_icon';
 import point_simplesquare from '../data/styles/point_simplesquare';
 import point_simplestar from '../data/styles/point_simplestar';
+import point_simplestartransparentfill from '../data/styles/point_simplestartransparentfill';
 import point_simpletriangle from '../data/styles/point_simpletriangle';
 import point_simplecross from '../data/styles/point_simplecross';
 import point_simplex from '../data/styles/point_simplex';
@@ -42,7 +43,6 @@ import scaleDenomLine from '../data/styles/scaleDenom_line';
 import scaleDenomLineCircle from '../data/styles/scaleDenom_line_circle';
 import scaleDenomLineCircleOverlap from '../data/styles/scaleDenom_line_circle_overlap';
 import polygon_transparentpolygon from '../data/styles/polygon_transparentpolygon';
-import polygon_graphicfill_mark from '../data/styles/polygon_graphicFill_mark';
 import polygon_simple from '../data/styles/polygon_simple';
 import point_styledlabel from '../data/styles/point_styledlabel';
 import point_fontglyph from '../data/styles/point_fontglyph';
@@ -62,6 +62,7 @@ import ol_point_icon from '../data/olStyles/point_icon';
 import ol_point_icon_sprite from '../data/olStyles/point_icon_sprite';
 import ol_point_simplesquare from '../data/olStyles/point_simplesquare';
 import ol_point_simplestar from '../data/olStyles/point_simplestar';
+import ol_point_simplestartransparentfill from '../data/olStyles/point_simplestartransparentfill';
 import ol_point_simpletriangle from '../data/olStyles/point_simpletriangle';
 import ol_point_simplecross from '../data/olStyles/point_simplecross';
 import ol_point_simplex from '../data/olStyles/point_simplex';
@@ -178,6 +179,11 @@ describe('OlStyleParser implements StyleParser', () => {
       const { output: geoStylerStyle } = await styleParser.readStyle(ol_point_simplestar);
       expect(geoStylerStyle).toBeDefined();
       expect(geoStylerStyle).toEqual(point_simplestar);
+    });
+    it('can read an OpenLayers MarkSymbolizer as WellKnownName Star Transparent Fill', async () => {
+      const { output: geoStylerStyle } = await styleParser.readStyle(ol_point_simplestartransparentfill);
+      expect(geoStylerStyle).toBeDefined();
+      expect(geoStylerStyle).toEqual(point_simplestartransparentfill);
     });
     it('can read an OpenLayers MarkSymbolizer as WellKnownName Triangle', async () => {
       const { output: geoStylerStyle } = await styleParser.readStyle(ol_point_simpletriangle);
@@ -561,6 +567,24 @@ describe('OlStyleParser implements StyleParser', () => {
     expect((dimensions / 2)).toBeCloseTo(expecSymb.radius as number);
     expect(fill).toEqual(expecSymb.color);
     expect(JSON.stringify(ol_point_simplestar)).toEqual(JSON.stringify(olStyle));
+  });
+  it('can write an OpenLayers Marker star transparent fill', async () => {
+    let { output: olStyle } = await styleParser.writeStyle(point_simplestartransparentfill);
+    olStyle = olStyle as OlStyle;
+    expect(olStyle).toBeDefined();
+
+    const expecSymb = point_simplestartransparentfill.rules[0].symbolizers[0] as MarkSymbolizer;
+    const olStarTransparentFill = olStyle.getImage() as OlStyleIcon;
+    expect(olStarTransparentFill).toBeDefined();
+
+    const svgString = OlStyleUtil.getBase64DecodedSvg(olStarTransparentFill.getSrc() as string);
+    const { id, dimensions, fill, fillOpacity } = getSvgProperties(svgString);
+
+    expect(id).toEqual(expecSymb.wellKnownName);
+    expect((dimensions / 2)).toBeCloseTo(expecSymb.radius as number);
+    expect(fill).toEqual(expecSymb.color);
+    expect(fillOpacity).toEqual(expecSymb.fillOpacity);
+    expect(JSON.stringify(ol_point_simplestartransparentfill)).toEqual(JSON.stringify(olStyle));
   });
   it('can write an OpenLayers Marker triangle', async () => {
     let { output: olStyle } = await styleParser.writeStyle(point_simpletriangle);

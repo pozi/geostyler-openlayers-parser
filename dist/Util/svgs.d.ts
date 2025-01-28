@@ -23,8 +23,10 @@ export declare const isPointSvgDefined: (shape: string) => boolean;
  * @param {SvgOptions} [options={}] The options to use for the shape.
  *     The following options are supported:
  *     - fill: The color to use for filling the shape. Default is '#fff'.
+ *     - fillOpacity: The opacity to use for filling the shape. Default is '1'.
  *     - stroke: The color to use for the shape's stroke. Default is '#000'.
  *     - strokeWidth: The width of the shape's stroke. Default is '1'.
+ *     - strokeOpacity: The opacity to use for the shape's stroke. Default is '1'.
  *     - dimensions: The width and height of the resulting SVG. Default is '40'.
  * @returns {string} An SVG string for the given shape type with the specified options.
  */
