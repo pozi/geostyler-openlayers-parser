@@ -26,7 +26,11 @@ import {
 import OlFeature from 'ol/Feature';
 import { colors } from './colors';
 
+import { Base64 } from 'js-base64';
+
 const WELLKNOWNNAME_TTF_REGEXP = /^ttf:\/\/(.+)#(.+)$/;
+const SVG_URI_SCHEME = 'data:image/svg+xml;base64,';
+export const LINE_WELLKNOWNNAMES = ['horline', 'vertline', 'line'];
 export const DUMMY_MARK_SYMBOLIZER_FONT = 'geostyler-mark-symbolizer';
 
 /**
@@ -151,6 +155,18 @@ class OlStyleUtil {
   }
 
   /**
+   * Checks if the given opacity value is valid.
+   * A valid opacity is a number between 0 and 1.
+   * Value 1 is ignored as this the default value.
+   * If the value is not valid, false is returned.
+   * @param opacity The opacity value to check
+   * @return true if the opacity is valid, false otherwise
+   */
+  public static checkOpacity(opacity: number | string | undefined): boolean {
+    return typeof opacity === 'number' && opacity >= 0 && opacity < 1;
+  }
+
+  /**
    * Returns an OL compliant font string.
    *
    * @param symbolizer The TextSymbolizer to derive the font string from
@@ -243,6 +259,26 @@ class OlStyleUtil {
   public static getSizeFromOlFont(olFont: string) {
     const parts = olFont.match(/(?:(\d+)px)/);
     return parts ? parseInt(parts[1], 10) : 0;
+  }
+
+  /**
+   * Encodes the given SVG string using base64 encoding.
+   *
+   * @param svgString the SVG string to encode
+   * @returns the base64 encoded SVG string
+   */
+  public static getBase64EncodedSvg(svgString: string) {
+    return SVG_URI_SCHEME + Base64.encode(svgString);
+  }
+
+  /**
+   * Decodes a base64 encoded SVG string.
+   *
+   * @param svgBase64String The base64 encoded SVG string to decode.
+   * @returns The decoded SVG string in UTF-8 format.
+   */
+  public static getBase64DecodedSvg(svgBase64String: string) {
+    return Base64.decode(svgBase64String.replace(SVG_URI_SCHEME, ''));
   }
 
   /**

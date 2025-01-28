@@ -37,7 +37,8 @@
   },
   "dependencies": {
     "css-font-parser": "^2.0.0",
-    "geostyler-style": "^9.0.1"
+    "geostyler-style": "^9.0.1",
+    "js-base64": "^3.7.7"
   },
   "peerDependencies": {
     "ol": ">=7.4"
