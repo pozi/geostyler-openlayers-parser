@@ -168,7 +168,7 @@ export declare class OlStyleParser implements StyleParser<OlStyleLike> {
      * @param filter Filter
      * @return boolean true if feature matches filter expression
      */
-    geoStylerFilterToOlParserFilter(feature: any, filter: Filter): boolean;
+    geoStylerFilterToOlParserFilter(feature: any, filter: Filter): Promise<boolean>;
     /**
      * Get the OpenLayers Style object or an OL StyleFunction from an
      * GeoStyler-Style Symbolizer.
