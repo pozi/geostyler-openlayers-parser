@@ -1,0 +1,7 @@
+{
+  "src/OlStyleParser.ts": {
+    "file": "olStyleParser.iife.js",
+    "isEntry": true,
+    "src": "src/OlStyleParser.ts"
+  }
+}
