@@ -827,7 +827,7 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
           matchesFilter = true;
         } else {
           try {
-            matchesFilter = await this.geoStylerFilterToOlParserFilter(feature, rule.filter);
+            matchesFilter = this.geoStylerFilterToOlParserFilter(feature, rule.filter);
           } catch (e) {
             matchesFilter = false;
           }
@@ -873,7 +873,7 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
    * @param filter Filter
    * @return boolean true if feature matches filter expression
    */
-  async geoStylerFilterToOlParserFilter(feature: any, filter: Filter): Promise<boolean> {
+  geoStylerFilterToOlParserFilter(feature: any, filter: Filter): boolean {
     const operatorMapping: any = {
       '&&': true,
       '||': true,
@@ -900,25 +900,25 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
           case '&&':
             intermediate = true;
             restFilter = filter.slice(1);
-            for (const f of restFilter) {
-              if (!(await this.geoStylerFilterToOlParserFilter(feature, f))) {
+            restFilter.forEach((f: Filter) => {
+              if (!this.geoStylerFilterToOlParserFilter(feature, f)) {
                 intermediate = false;
               }
-            };
+            });
             matchesFilter = intermediate;
             break;
           case '||':
             intermediate = false;
             restFilter = filter.slice(1);
-            for (const f of restFilter) {
-              if (await this.geoStylerFilterToOlParserFilter(feature, f)) {
+            restFilter.forEach((f: Filter) => {
+              if (this.geoStylerFilterToOlParserFilter(feature, f)) {
                 intermediate = true;
               }
-            };
+            });
             matchesFilter = intermediate;
             break;
           case '!':
-            matchesFilter = !(await this.geoStylerFilterToOlParserFilter(feature, filter[1]));
+            matchesFilter = !this.geoStylerFilterToOlParserFilter(feature, filter[1]);
             break;
           default:
             throw new Error('Cannot parse Filter. Unknown combination or negation operator.');
