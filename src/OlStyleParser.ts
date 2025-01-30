@@ -869,7 +869,7 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
         feature.setStyle(result);
         feature.changed();
       });
-      return []; // Return immediately, to avoid OpenLayers trying to render the function
+      return []; // Return immediately, to avoid an OpenLayers error when trying to render the function
     };
 
     olStyleFct.__geoStylerStyle = geoStylerStyle;
@@ -1267,7 +1267,7 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
     });
 
     if (symbolizer.graphicFill) {
-      const pattern = this.getOlPatternFromGraphicFill(symbolizer.graphicFill);
+      const pattern = await this.getOlPatternFromGraphicFill(symbolizer.graphicFill);
       if (!fill) {
         fill = new this.OlStyleFillConstructor({});
       }
@@ -1298,7 +1298,7 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
       let scaleFactor = 1;
       if (isIconSymbolizer(graphicFill)) {
         graphicFillStyle = await this.getOlIconSymbolizerFromIconSymbolizer(graphicFill);
-        iconSize = graphicFillStyle.getSize();
+        iconSize = graphicFillStyle?.getSize() || iconSize;
       } else if (isMarkSymbolizer(graphicFill)) {
         graphicFillStyle = await this.getOlPointSymbolizerFromMarkSymbolizer(graphicFill);
         const iconSvg = OlStyleUtil.getBase64DecodedSvg(graphicFillStyle.getImage().getSrc());

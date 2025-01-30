@@ -143,7 +143,7 @@ describe('OlStyleParser implements StyleParser', () => {
     });
     it('can read an OpenLayers Style Function', async () => {
       const styleFct: OlParserStyleFct = (feature, resolution) => {
-        return ol_point_simplepoint;
+        return [ol_point_simplepoint];
       };
       styleFct.__geoStylerStyle = point_simplepoint;
 
