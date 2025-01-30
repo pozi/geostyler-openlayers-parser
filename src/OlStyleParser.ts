@@ -48,7 +48,7 @@ import { toContext } from 'ol/render';
 import OlFeature from 'ol/Feature';
 
 export interface OlParserStyleFct {
-  (feature?: any, resolution?: number): any;
+  (feature?: any, resolution?: number): any[];
   __geoStylerStyle: Style;
 }
 
@@ -752,10 +752,10 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
           return await this.geoStylerStyleToOlStyleArray(geoStylerStyle);
         }
       } else {
-        return await this.geoStylerStyleToOlParserStyleFct(geoStylerStyle);
+        return this.geoStylerStyleToOlParserStyleFct(geoStylerStyle);
       }
     } else {
-      return await this.geoStylerStyleToOlParserStyleFct(geoStylerStyle);
+      return this.geoStylerStyleToOlParserStyleFct(geoStylerStyle);
     }
   }
 
@@ -794,9 +794,9 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
    * @param geoStylerStyle A GeoStyler-Style Style.
    * @return An OlParserStyleFct
    */
-  async geoStylerStyleToOlParserStyleFct(geoStylerStyle: Style): Promise<OlParserStyleFct> {
+  geoStylerStyleToOlParserStyleFct(geoStylerStyle: Style): OlParserStyleFct {
     const rules = structuredClone(geoStylerStyle.rules);
-    const olStyle = async (feature: any, resolution: number): Promise<any[]> => {
+    const olStyle = async (feature: any, resolution: any): Promise<any[]> => {
       const styles: any[] = [];
 
       // calculate scale for resolution (from ol-util MapUtil)
@@ -862,8 +862,18 @@ export class OlStyleParser implements StyleParser<OlStyleLike> {
       };
       return styles;
     };
-    const olStyleFct: OlParserStyleFct = olStyle as OlParserStyleFct;
+
+    const olStyleFct: OlParserStyleFct = (feature, resolution) => {
+      olStyle(feature, resolution).then(result => {
+        // This is called once the async styles are ready
+        feature.setStyle(result);
+        feature.changed();
+      });
+      return []; // Return immediately, to avoid OpenLayers trying to render the function
+    };
+
     olStyleFct.__geoStylerStyle = geoStylerStyle;
+
     return olStyleFct;
   }
 

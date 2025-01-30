@@ -688,11 +688,11 @@ export class OlStyleParser {
                 }
             }
             else {
-                return await this.geoStylerStyleToOlParserStyleFct(geoStylerStyle);
+                return this.geoStylerStyleToOlParserStyleFct(geoStylerStyle);
             }
         }
         else {
-            return await this.geoStylerStyleToOlParserStyleFct(geoStylerStyle);
+            return this.geoStylerStyleToOlParserStyleFct(geoStylerStyle);
         }
     }
     /**
@@ -729,7 +729,7 @@ export class OlStyleParser {
      * @param geoStylerStyle A GeoStyler-Style Style.
      * @return An OlParserStyleFct
      */
-    async geoStylerStyleToOlParserStyleFct(geoStylerStyle) {
+    geoStylerStyleToOlParserStyleFct(geoStylerStyle) {
         const rules = structuredClone(geoStylerStyle.rules);
         const olStyle = async (feature, resolution) => {
             const styles = [];
@@ -796,7 +796,14 @@ export class OlStyleParser {
             ;
             return styles;
         };
-        const olStyleFct = olStyle;
+        const olStyleFct = (feature, resolution) => {
+            olStyle(feature, resolution).then(result => {
+                // This is called once the async styles are ready
+                feature.setStyle(result);
+                feature.changed();
+            });
+            return []; // Return immediately, to avoid OpenLayers trying to render the function
+        };
         olStyleFct.__geoStylerStyle = geoStylerStyle;
         return olStyleFct;
     }
