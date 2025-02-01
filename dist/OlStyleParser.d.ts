@@ -161,7 +161,7 @@ export declare class OlStyleParser implements StyleParser<OlStyleLike> {
      * @param geoStylerStyle A GeoStyler-Style Style.
      * @return An OlParserStyleFct
      */
-    geoStylerStyleToOlParserStyleFct(geoStylerStyle: Style): Promise<OlParserStyleFct>;
+    geoStylerStyleToOlParserStyleFct(geoStylerStyle: Style): OlParserStyleFct;
     /**
      * Checks if a feature matches given filter expression(s)
      * @param feature ol.Feature

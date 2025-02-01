@@ -688,11 +688,11 @@ export class OlStyleParser {
                 }
             }
             else {
-                return await this.geoStylerStyleToOlParserStyleFct(geoStylerStyle);
+                return this.geoStylerStyleToOlParserStyleFct(geoStylerStyle);
             }
         }
         else {
-            return await this.geoStylerStyleToOlParserStyleFct(geoStylerStyle);
+            return this.geoStylerStyleToOlParserStyleFct(geoStylerStyle);
         }
     }
     /**
@@ -729,7 +729,7 @@ export class OlStyleParser {
      * @param geoStylerStyle A GeoStyler-Style Style.
      * @return An OlParserStyleFct
      */
-    async geoStylerStyleToOlParserStyleFct(geoStylerStyle) {
+    geoStylerStyleToOlParserStyleFct(geoStylerStyle) {
         const rules = structuredClone(geoStylerStyle.rules);
         const olStyle = async (feature, resolution) => {
             const styles = [];
@@ -796,7 +796,14 @@ export class OlStyleParser {
             ;
             return styles;
         };
-        const olStyleFct = olStyle;
+        const olStyleFct = (feature, resolution) => {
+            olStyle(feature, resolution).then(result => {
+                // This is called once the async styles are ready
+                feature.setStyle(result);
+                feature.changed();
+            });
+            return []; // Return immediately, to avoid an OpenLayers error when trying to render the function
+        };
         olStyleFct.__geoStylerStyle = geoStylerStyle;
         return olStyleFct;
     }
@@ -1167,7 +1174,7 @@ export class OlStyleParser {
             stroke
         });
         if (symbolizer.graphicFill) {
-            const pattern = this.getOlPatternFromGraphicFill(symbolizer.graphicFill);
+            const pattern = await this.getOlPatternFromGraphicFill(symbolizer.graphicFill);
             if (!fill) {
                 fill = new this.OlStyleFillConstructor({});
             }
@@ -1196,7 +1203,7 @@ export class OlStyleParser {
             let scaleFactor = 1;
             if (isIconSymbolizer(graphicFill)) {
                 graphicFillStyle = await this.getOlIconSymbolizerFromIconSymbolizer(graphicFill);
-                iconSize = graphicFillStyle.getSize();
+                iconSize = graphicFillStyle?.getSize() || iconSize;
             }
             else if (isMarkSymbolizer(graphicFill)) {
                 graphicFillStyle = await this.getOlPointSymbolizerFromMarkSymbolizer(graphicFill);
