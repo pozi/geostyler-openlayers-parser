@@ -48,7 +48,7 @@ import { toContext } from 'ol/render';
 import OlFeature from 'ol/Feature';
 
 export interface OlParserStyleFct {
-  (feature?: any, resolution?: number): any[];
+  (feature?: any, resolution?: number): any;
   __geoStylerStyle: Style;
 }
 

@@ -9,7 +9,7 @@ import OlStyleIcon from 'ol/style/Icon';
 import OlStyleRegularshape from 'ol/style/RegularShape';
 import OlFeature from 'ol/Feature';
 export interface OlParserStyleFct {
-    (feature?: any, resolution?: number): any[];
+    (feature?: any, resolution?: number): any;
     __geoStylerStyle: Style;
 }
 /**
