@@ -7,8 +7,12 @@ export interface SvgOptions {
     strokeWidth?: number;
     strokeOpacity?: number;
 }
+type svgDefinition = {
+    [key: string]: string;
+};
+export declare const pointSvgs: svgDefinition;
 export declare const removeDuplicateShapes: (shape: string) => string;
-export declare const isPointSvgDefined: (shape: string) => boolean;
+export declare const isPointDefinedAsSvg: (shape: string) => boolean;
 /**
  * Returns an SVG string for a given shape type with the specified options.
  *
@@ -38,3 +42,4 @@ export declare const getShapeSvg: (shape?: string, options?: SvgOptions) => stri
  * @returns an object containing the SVG properties
  */
 export declare const getSvgProperties: (svgString: string) => SvgOptions;
+export {};

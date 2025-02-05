@@ -1,6 +1,6 @@
 import OlStyleUtil, { LINE_WELLKNOWNNAMES } from './OlStyleUtil';
 // Shape definitions, all are roughly scaled to 20x20 in coordinates between (-10,-10) to (10,10)
-const pointSvgs = {
+export const pointSvgs = {
     arrow: 'd="M 0,-10 L 5,-5 L 2.5,-5 L 2.5,10 L -2.5,10 L -2.5,-5 L -5,-5 L 0,-10 Z"',
     arrowhead: 'd="M -10 -10 L 0 0 L -10 10"',
     asterisk_fill: 'd="M -1.5,-10 L 1.5,-10L 1.5,-3.939 L 6.011,-8.132 L 8.132,-6.011 L 3.939,-1.5 L 10,-1.5 L 10,1.5 ' +
@@ -76,7 +76,7 @@ export const removeDuplicateShapes = (shape) => {
             return shape;
     }
 };
-export const isPointSvgDefined = (shape) => shape in pointSvgs;
+export const isPointDefinedAsSvg = (shape) => shape in pointSvgs;
 /**
  * Returns an SVG string for a given shape type with the specified options.
  *
@@ -98,9 +98,10 @@ export const isPointSvgDefined = (shape) => shape in pointSvgs;
  *     - dimensions: The width and height of the resulting SVG. Default is '40'.
  * @returns {string} An SVG string for the given shape type with the specified options.
  */
-export const getShapeSvg = (shape = 'circle', options = { dimensions: 40 }) => {
+export const getShapeSvg = (shape = 'circle', options = { dimensions: 40, fill: '#fff', fillOpacity: 1,
+    stroke: '#000', strokeWidth: 1, strokeOpacity: 1 }) => {
     const { dimensions, fill, fillOpacity, stroke, strokeWidth, strokeOpacity } = options;
-    if (!isPointSvgDefined(shape)) {
+    if (!isPointDefinedAsSvg(shape)) {
         throw new Error('Unknown shape: ' + shape);
     }
     const svgHeader = '<svg xmlns="http://www.w3.org/2000/svg" ' +
@@ -139,7 +140,7 @@ export const getShapeSvg = (shape = 'circle', options = { dimensions: 40 }) => {
         svgStyle += 'stroke-opacity:' + strokeOpacity + '; ';
     }
     if (LINE_WELLKNOWNNAMES.includes(shape)) {
-        svgStyle = svgStyle + 'stroke-linejoin: butt; ';
+        svgStyle = svgStyle + 'stroke-linejoin: butt';
     }
     svgBody += 'style="' + svgStyle.trim() + '" />';
     return svgHeader + svgBody + svgFooter;
@@ -202,4 +203,4 @@ export const getSvgProperties = (svgString) => {
         throw new Error('Error parsing SVG');
     }
 };
-//# sourceMappingURL=svgs.js.map
+//# sourceMappingURL=OlSvgPoints.js.map

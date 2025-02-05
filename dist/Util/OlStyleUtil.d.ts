@@ -2,7 +2,9 @@ import { MarkSymbolizer, PropertyType, Style, TextSymbolizer } from 'geostyler-s
 import { GeoStylerBooleanFunction, GeoStylerFunction, GeoStylerNumberFunction, GeoStylerStringFunction, GeoStylerUnknownFunction } from 'geostyler-style/dist/functions';
 import OlFeature from 'ol/Feature';
 export declare const LINE_WELLKNOWNNAMES: string[];
+export declare const NOFILL_WELLKNOWNNAMES: string[];
 export declare const DUMMY_MARK_SYMBOLIZER_FONT = "geostyler-mark-symbolizer";
+export declare const DEGREES_TO_RADIANS: number;
 /**
  * Offers some utility functions to work with OpenLayers Styles.
  */
@@ -104,19 +106,19 @@ declare class OlStyleUtil {
      */
     static getSizeFromOlFont(olFont: string): number;
     /**
-     * Encodes the given SVG string using base64 encoding.
+     * Encodes the given SVG string using URI encoding to remove special characters.
      *
      * @param svgString the SVG string to encode
-     * @returns the base64 encoded SVG string
+     * @returns the URI encoded SVG string
      */
-    static getBase64EncodedSvg(svgString: string): string;
+    static getEncodedSvg(svgString: string): string;
     /**
-     * Decodes a base64 encoded SVG string.
+     * Decodes a URI encoded SVG string.
      *
-     * @param svgBase64String The base64 encoded SVG string to decode.
-     * @returns The decoded SVG string in UTF-8 format.
+     * @param svgEncodedString The URI encoded SVG string to decode.
+     * @returns The decoded SVG string.
      */
-    static getBase64DecodedSvg(svgBase64String: string): string;
+    static getDecodedSvg(svgEncodedString: string): string;
     /**
      * Resolves the given template string with the given feature attributes, e.g.
      * the template "Size of area is {{AREA_SIZE}} km²" would be to resolved
