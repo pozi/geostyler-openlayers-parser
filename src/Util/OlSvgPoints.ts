@@ -15,7 +15,7 @@ type svgDefinition = {
 };
 
 // Shape definitions, all are roughly scaled to 20x20 in coordinates between (-10,-10) to (10,10)
-const pointSvgs: svgDefinition = {
+export const pointSvgs: svgDefinition = {
   arrow: 'd="M 0,-10 L 5,-5 L 2.5,-5 L 2.5,10 L -2.5,10 L -2.5,-5 L -5,-5 L 0,-10 Z"',
   arrowhead: 'd="M -10 -10 L 0 0 L -10 10"',
   asterisk_fill: 'd="M -1.5,-10 L 1.5,-10L 1.5,-3.939 L 6.011,-8.132 L 8.132,-6.011 L 3.939,-1.5 L 10,-1.5 L 10,1.5 ' +
@@ -93,7 +93,7 @@ export const removeDuplicateShapes = (shape: string) => {
   }
 };
 
-export const isPointSvgDefined = (shape: string) => shape in pointSvgs;
+export const isPointDefinedAsSvg = (shape: string) => shape in pointSvgs;
 
 /**
  * Returns an SVG string for a given shape type with the specified options.
@@ -118,11 +118,12 @@ export const isPointSvgDefined = (shape: string) => shape in pointSvgs;
  */
 export const getShapeSvg = (
   shape = 'circle',
-  options: SvgOptions = { dimensions: 40 }
+  options: SvgOptions = { dimensions: 40, fill: '#fff', fillOpacity: 1,
+    stroke: '#000', strokeWidth: 1, strokeOpacity: 1 }
 ) => {
   const { dimensions, fill, fillOpacity, stroke, strokeWidth, strokeOpacity } = options;
 
-  if (!isPointSvgDefined(shape)) {
+  if (!isPointDefinedAsSvg(shape)) {
     throw new Error('Unknown shape: ' + shape);
   }
 
@@ -162,7 +163,7 @@ export const getShapeSvg = (
     svgStyle += 'stroke-opacity:' + strokeOpacity + '; ';
   }
   if (LINE_WELLKNOWNNAMES.includes(shape)) {
-    svgStyle = svgStyle + 'stroke-linejoin: butt; ';
+    svgStyle = svgStyle + 'stroke-linejoin: butt';
   }
 
   svgBody += 'style="' + svgStyle.trim() + '" />';
