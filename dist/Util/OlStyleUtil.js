@@ -3,7 +3,7 @@ import { colors } from './colors';
 const WELLKNOWNNAME_TTF_REGEXP = /^ttf:\/\/(.+)#(.+)$/;
 const SVG_URI_SCHEME = 'data:image/svg+xml;utf8,';
 export const LINE_WELLKNOWNNAMES = ['horline', 'vertline', 'line'];
-export const NOFILL_WELLKNOWNNAMES = ['horline', 'vertline', 'line', 'cross', 'cross2', 'slash', 'backslash', 'oarrow'];
+export const NOFILL_WELLKNOWNNAMES = ['horline', 'vertline', 'line', 'cross', 'cross2', 'slash', 'backslash', 'oarrow', 'x'];
 export const DUMMY_MARK_SYMBOLIZER_FONT = 'geostyler-mark-symbolizer';
 export const DEGREES_TO_RADIANS = Math.PI / 180;
 /**

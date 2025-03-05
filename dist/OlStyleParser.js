@@ -1251,24 +1251,44 @@ export class OlStyleParser {
             }
         }
         else if (isMarkSymbolizer(graphicFill)) {
-            graphicFillStyle = this.getOlPointSymbolizerFromMarkSymbolizer(graphicFill, undefined, false);
-            const diameter = graphicFill.radius * 2;
-            iconSize = [diameter, diameter];
+            const isDenseFill = graphicFill.wellKnownName.includes('brush://dense');
+            const isLineSymbol = LINE_WELLKNOWNNAMES.includes(String(graphicFill.wellKnownName));
+            const isSimpleLineFill = !graphicFill.strokeWidth && NOFILL_WELLKNOWNNAMES.includes(String(graphicFill.wellKnownName));
+            if (isDenseFill) {
+                const densityPatternNo = Number(graphicFill.wellKnownName.charAt(graphicFill.wellKnownName.length - 1));
+                iconSpacing = 1.5 + (2 * (densityPatternNo - 1));
+                graphicFill.wellKnownName = 'square';
+                graphicFill.radius = 1;
+                graphicFill.strokeWidth = 0;
+            }
             // Hack to try to join lines for hatch patterns, but space out icon patterns.
             // Diagonal lines still do not render nicely in the corners, due to tiling.
             // TODO: Maybe use VendorOption's to control spacing?
-            if (LINE_WELLKNOWNNAMES.includes(String(graphicFill.wellKnownName))) {
+            if (isLineSymbol || isSimpleLineFill) {
                 const iconRotation = graphicFill.rotate || 0;
                 // Extend lines that aren't horizontal or vertical to be full size of the canvas
                 const isNotVerticalOrHorizontal = (iconRotation / DEGREES_TO_RADIANS) % 1 !== 0;
                 if (isNotVerticalOrHorizontal) {
                     scaleFactor = Math.sin(iconRotation * DEGREES_TO_RADIANS);
                 }
+                // In QGIS, these are simple fills that don't have any stroke width set
+                if (isSimpleLineFill) {
+                    graphicFill.strokeWidth = 0.8;
+                    graphicFill.radius = 6;
+                    scaleFactor = 0.8;
+                    if (['backslash', 'slash', 'x'].includes(graphicFill.wellKnownName.toLowerCase())) {
+                        scaleFactor = 0.5;
+                        graphicFill.radius = 12;
+                    }
+                }
             }
-            else {
+            else if (!isDenseFill) {
                 iconSpacing = 2;
             }
             ;
+            const diameter = graphicFill.radius * 2;
+            iconSize = [diameter, diameter];
+            graphicFillStyle = this.getOlPointSymbolizerFromMarkSymbolizer(graphicFill, undefined, false);
         }
         else {
             return null;
