@@ -1,8 +1,6 @@
 import { MarkSymbolizer, PropertyType, Style, TextSymbolizer } from 'geostyler-style/dist/style';
 import { GeoStylerBooleanFunction, GeoStylerFunction, GeoStylerNumberFunction, GeoStylerStringFunction, GeoStylerUnknownFunction } from 'geostyler-style/dist/functions';
 import OlFeature from 'ol/Feature';
-export declare const LINE_WELLKNOWNNAMES: string[];
-export declare const NOFILL_WELLKNOWNNAMES: string[];
 export declare const DUMMY_MARK_SYMBOLIZER_FONT = "geostyler-mark-symbolizer";
 export declare const DEGREES_TO_RADIANS: number;
 /**
@@ -40,6 +38,16 @@ declare class OlStyleUtil {
      */
     static getHexCodeFromRgbArray(colorArr: number[]): string;
     /**
+     * Appends an alpha value to a HEX color code to form an RGBA-like hex code.
+     *
+     * @param hexColor The HEX color code to which the alpha value will be appended.
+     *                 It should start with the '#' character.
+     * @param opacity The opacity value between 0 and 1, representing the alpha channel.
+     * @return The RGBA-like hex color code with the appended alpha value as a string,
+     *         or undefined if the input hexColor is not a valid HEX color.
+     */
+    static getHexAlphaFromHexAndOpacity(hexColor: string, opacity: number): string | undefined;
+    /**
      * Returns the opacity value of a RGB(A) color value.
      *
      * @param rgbaColor RGBA encoded color
@@ -54,7 +62,7 @@ declare class OlStyleUtil {
      * @param opacity The opacity value to check
      * @return true if the opacity is valid, false otherwise
      */
-    static checkOpacity(opacity: number | string | undefined): boolean;
+    static checkOpacity(opacity: number | GeoStylerNumberFunction | undefined): boolean;
     /**
      * Returns an OL compliant font string.
      *
@@ -105,20 +113,6 @@ declare class OlStyleUtil {
      * @param olFont the `font` property of an OpenLayers text style
      */
     static getSizeFromOlFont(olFont: string): number;
-    /**
-     * Encodes the given SVG string using URI encoding to remove special characters.
-     *
-     * @param svgString the SVG string to encode
-     * @returns the URI encoded SVG string
-     */
-    static getEncodedSvg(svgString: string): string;
-    /**
-     * Decodes a URI encoded SVG string.
-     *
-     * @param svgEncodedString The URI encoded SVG string to decode.
-     * @returns The decoded SVG string.
-     */
-    static getDecodedSvg(svgEncodedString: string): string;
     /**
      * Resolves the given template string with the given feature attributes, e.g.
      * the template "Size of area is {{AREA_SIZE}} km²" would be to resolved

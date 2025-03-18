@@ -185,7 +185,7 @@ export declare class OlStyleParser implements StyleParser<OlStyleLike> {
      *  shapes, but has a timing issue (even as a data URL) when used to create canvas fill patterns.
      * @return The OL Style object
      */
-    getOlPointSymbolizerFromMarkSymbolizer(markSymbolizer: MarkSymbolizer, feature?: OlFeature, preferSvg?: boolean): OlStyle;
+    getOlPointSymbolizerFromMarkSymbolizer(markSymbolizer: MarkSymbolizer, feature?: OlFeature): OlStyle;
     /**
      * Get the OL Style object  from an GeoStyler-Style IconSymbolizer.
      *

@@ -1,9 +1,6 @@
 import { isGeoStylerBooleanFunction, isGeoStylerFunction, isGeoStylerNumberFunction, isGeoStylerStringFunction, isGeoStylerUnknownFunction } from 'geostyler-style/dist/typeguards';
 import { colors } from './colors';
 const WELLKNOWNNAME_TTF_REGEXP = /^ttf:\/\/(.+)#(.+)$/;
-const SVG_URI_SCHEME = 'data:image/svg+xml;utf8,';
-export const LINE_WELLKNOWNNAMES = ['horline', 'vertline', 'line'];
-export const NOFILL_WELLKNOWNNAMES = ['horline', 'vertline', 'line', 'cross', 'cross2', 'slash', 'backslash', 'oarrow', 'x'];
 export const DUMMY_MARK_SYMBOLIZER_FONT = 'geostyler-mark-symbolizer';
 export const DEGREES_TO_RADIANS = Math.PI / 180;
 /**
@@ -97,6 +94,27 @@ class OlStyleUtil {
             }
             return '';
         }).join('');
+    }
+    /**
+     * Appends an alpha value to a HEX color code to form an RGBA-like hex code.
+     *
+     * @param hexColor The HEX color code to which the alpha value will be appended.
+     *                 It should start with the '#' character.
+     * @param opacity The opacity value between 0 and 1, representing the alpha channel.
+     * @return The RGBA-like hex color code with the appended alpha value as a string,
+     *         or undefined if the input hexColor is not a valid HEX color.
+     */
+    static getHexAlphaFromHexAndOpacity(hexColor, opacity) {
+        if (!hexColor.startsWith('#')) {
+            return;
+        }
+        ;
+        // Ensure opacity is within the valid range (0-1)
+        opacity = Math.max(0, Math.min(1, opacity));
+        // Convert opacity to a hexadecimal value (00-FF)
+        const alpha = Math.round(opacity * 255).toString(16).padStart(2, '0');
+        // Construct the RGBA hex color string
+        return `${hexColor}${alpha}`;
     }
     /**
      * Returns the opacity value of a RGB(A) color value.
@@ -212,24 +230,6 @@ class OlStyleUtil {
     static getSizeFromOlFont(olFont) {
         const parts = olFont.match(/(?:(\d+)px)/);
         return parts ? parseInt(parts[1], 10) : 0;
-    }
-    /**
-     * Encodes the given SVG string using URI encoding to remove special characters.
-     *
-     * @param svgString the SVG string to encode
-     * @returns the URI encoded SVG string
-     */
-    static getEncodedSvg(svgString) {
-        return SVG_URI_SCHEME + encodeURIComponent(svgString);
-    }
-    /**
-     * Decodes a URI encoded SVG string.
-     *
-     * @param svgEncodedString The URI encoded SVG string to decode.
-     * @returns The decoded SVG string.
-     */
-    static getDecodedSvg(svgEncodedString) {
-        return decodeURIComponent(svgEncodedString).replace(SVG_URI_SCHEME, '');
     }
     /**
      * Resolves the given template string with the given feature attributes, e.g.
