@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "css-font-parser": "^2.0.0",
-    "geostyler-style": "github:pozi/geostyler-style#v1.0.3"
+    "geostyler-style": "github:pozi/geostyler-style#v1.0.4"
   },
   "peerDependencies": {
     "ol": ">=7.4"
