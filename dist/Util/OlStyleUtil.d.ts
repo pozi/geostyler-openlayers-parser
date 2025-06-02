@@ -50,10 +50,10 @@ declare class OlStyleUtil {
     /**
      * Returns the opacity value of a RGB(A) color value.
      *
-     * @param rgbaColor RGBA encoded color
+     * @param color RGBA or hex encoded color
      * @return {string | undefined} The opacity value of the given RGBA color
      */
-    static getOpacity(rgbaColor: string): number | undefined;
+    static getOpacity(color: string): number | undefined;
     /**
      * Checks if the given opacity value is valid.
      * A valid opacity is a number between 0 and 1.
